@@ -34,7 +34,7 @@
 
 .maarchLogo {
   transition: all 1s ease-in-out;
-  width: 100%;
+  width: 50%;
   height: auto;
   padding-bottom: 10px;
 }
@@ -50,7 +50,7 @@ footer {
 
 .infoLogin {
   font-weight: bold;
-  color: white;
+  color: var(--maarch-color-primary);
   text-decoration: none;
 }
 
@@ -63,9 +63,9 @@ footer {
   border-radius: 5px;
   position: relative;
   z-index: 1;
-  background: inherit;
+  background: #e1e1ee;
   overflow: hidden;
-  border: 2px #24b0ed solid;
+  /* border: 2px #24b0ed solid; */
 
   ::ng-deep .mat-form-field-appearance-outline.mat-form-field-invalid.mat-form-field-invalid .mat-form-field-outline-thick {
     /*change color of label*/
@@ -74,7 +74,8 @@ footer {
 
   ::ng-deep .mat-form-field-appearance-outline .mat-form-field-outline {
     color: white !important;
-    background: white;
+    background: #f0f3f6;
+    border-radius: 5px;
   }
 
   ::ng-deep.mat-form-field-underline {
