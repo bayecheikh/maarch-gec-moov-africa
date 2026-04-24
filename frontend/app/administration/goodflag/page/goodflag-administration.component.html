@@ -1,0 +1,119 @@
+<mat-sidenav-container autosize class="maarch-container">
+    <mat-sidenav-content>
+        <div class="bg-head">
+            <div class="bg-head-title" [class.customContainerRight]="appService.getViewMode()">
+                <div class="bg-head-title-label">
+                    <app-header-left></app-header-left>
+                </div>
+                <div class="bg-head-title-tool">
+                    <app-header-right></app-header-right>
+                </div>
+            </div>
+            <div class="bg-head-content" [class.fullContainer]="appService.getViewMode()">
+            </div>
+        </div>
+        <div class="container" [class.fullContainer]="appService.getViewMode()">
+            <div class="container-content">
+                <div *ngIf="loading" class="loading">
+                    <mat-spinner style="margin:auto;"></mat-spinner>
+                </div>
+                <mat-card class="card-app-content">
+                    <form (ngSubmit)="onSubmit()" #alfrescoForm="ngForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <mat-form-field>
+                                    <input matInput
+                                           required
+                                           name="label"
+                                           id="label"
+                                           type="text"
+                                           [value]="goodflagTemplate.label"
+                                           [title]="'lang.label' | translate"
+                                           [(ngModel)]="goodflagTemplate.label"
+                                           placeholder="{{'lang.label' | translate}}">
+                                </mat-form-field>
+                            </div>
+                            <div class="col-md-6">
+                                <mat-form-field>
+                                    <input matInput
+                                           name="description"
+                                           id="description"
+                                           type="text"
+                                           [value]="goodflagTemplate.description"
+                                           [title]="'lang.description' | translate"
+                                           [(ngModel)]="goodflagTemplate.description"
+                                           [placeholder]="'lang.description' | translate">
+                                </mat-form-field>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="flex-direction: row; flex-wrap: wrap;">
+                            <div class="formType ratio-2 col-sm-12">
+                                <div class="formType-title">
+                                    {{ 'lang.goodflagConsentPage' | translate }}
+                                </div>
+                                <div style="width: 100%;text-align: center;">
+                                    <mat-form-field style="margin-top: 15px">
+                                        <mat-label>{{ 'lang.goodflagConsentPage' | translate }}</mat-label>
+                                        <mat-select
+                                                required
+                                                name="currentConsentPage"
+                                                [value]="goodflagTemplate.consentPageId"
+                                                [(ngModel)]="goodflagTemplate.consentPageId"
+                                                (ngModelChange)="changeConsentPage($event)">
+                                            <mat-option *ngFor="let page of consentPages" [value]="page.id"
+                                                        id="consentPage">
+                                                {{ page.name }}
+                                            </mat-option>
+                                        </mat-select>
+                                    </mat-form-field>
+                                    <app-consent-page
+                                            *ngIf="!loading && !functions.empty(goodflagTemplate.consentPageId)"
+                                            [consentPage]="selectedConentPage">
+                                    </app-consent-page>
+                                </div>
+                            </div>
+                            <div class="formType ratio-1 col-sm-12">
+                                <div class="formType-title">
+                                    {{ 'lang.goodflagSignatureProfile' | translate }}
+                                </div>
+                                <div style="width: 100%;text-align: center;">
+                                    <mat-form-field style="margin-top: 15px">
+                                        <mat-label>{{ 'lang.goodflagSignatureProfile' | translate }}</mat-label>
+                                        <mat-select
+                                                required
+                                                name="currentSignatureProfile"
+                                                [(ngModel)]="goodflagTemplate.signatureProfileId"
+                                                (ngModelChange)="changeSignatureProfile($event)">
+                                            <mat-option *ngFor="let profile of signatureProfiles" [value]="profile.id">
+                                                {{ profile.name }}
+                                            </mat-option>
+                                        </mat-select>
+                                    </mat-form-field>
+                                    <app-signature-profile
+                                            *ngIf="!loading && !functions.empty(goodflagTemplate.signatureProfileId)"
+                                            [signatureProfile]="selectedSignatureProfile">
+                                    </app-signature-profile>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 text-center" style="padding:10px;">
+                            <button mat-raised-button
+                                    type="submit"
+                                    color="primary"
+                                    [disabled]="loading || !alfrescoForm.valid || !isModified()">
+                                {{ 'lang.save' | translate }}
+                            </button>
+                            <button mat-raised-button
+                                    type="button"
+                                    [disabled]="!isModified()"
+                                    (click)="cancelModification()">
+                                {{ 'lang.cancel' | translate }}
+                            </button>
+                        </div>
+                    </form>
+                </mat-card>
+            </div>
+        </div>
+    </mat-sidenav-content>
+</mat-sidenav-container>

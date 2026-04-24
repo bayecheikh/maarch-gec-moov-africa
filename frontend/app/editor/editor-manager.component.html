@@ -1,0 +1,93 @@
+<div *ngIf="loading || processing" class="loading" style="display:flex;height:100%;">
+    <mat-spinner style="margin:auto;"></mat-spinner>
+</div>
+<ng-container *ngIf="!loading && !onError">
+    <app-onlyoffice-viewer
+            *ngIf="editor.mode === 'onlyoffice'"
+            #editorComp
+            class="editor-container"
+            [params]="editor.options"
+            [file]="file"
+            [hideCloseEditor]="true"
+            [hideFullscreenButton]="true"
+            [hideCollapseButton]="true"
+            [editMode]="true"
+            [unannotatedVersion]="unannotatedVersion"
+            (triggerModifiedDocument)="modified = true"
+            (triggerCloseEditor)="processError.emit(true)"
+    ></app-onlyoffice-viewer>
+    <app-collabora-online-viewer
+            *ngIf="editor.mode === 'collaboraOnline'"
+            #editorComp
+            class="editor-container"
+            [params]="editor.options"
+            [file]="file"
+            [hideCloseEditor]="true"
+            [hideFullscreenButton]="true"
+            [hideCollapseButton]="true"
+            [editMode]="true"
+            [unannotatedVersion]="unannotatedVersion"
+            (triggerCloseEditor)="processError.emit(true)"
+            (triggerModifiedDocument)="modified = true"
+    ></app-collabora-online-viewer>
+    <app-office-sharepoint-viewer
+        *ngIf="editor.mode === 'office365sharepoint'"
+        #editorComp
+        class="editor-container"
+        [params]="editor.options"
+        [file]="file"
+        [hideDownloadButton]="true"
+        [hideCancelButton]="true"
+        [primaryColor]="true"
+        [editMode]="true"
+        [unannotatedVersion]="unannotatedVersion"
+        (triggerCloseEditor)="processError.emit(true)"
+        (triggerModifiedDocument)="modified = true"
+    ></app-office-sharepoint-viewer>
+    <app-java-editor
+            *ngIf="editor.mode === 'java'"
+            #editorComp
+            class="editor-container"
+            [params]="editor.options"
+            [file]="file"
+            [hideCancelButton]="true"
+            [primaryColor]="true"
+            [unannotatedVersion]="unannotatedVersion"
+            (triggerCloseEditor)="processError.emit(true)"
+            (triggerModifiedDocument)="modified = true"
+    ></app-java-editor>
+    <button *ngIf="modified && ['collaboraOnline', 'onlyoffice'].indexOf(editor.mode) > -1"
+        mat-fab
+        class="save-modifications"
+        color="accent"
+        [disabled]="processing"
+        [title]="'lang.saveModifications' | translate"
+        (click)="saveFile()">
+        <mat-icon style="height:auto;font-size:20px;" class="fas fa-check"></mat-icon>
+    </button>
+    <div mat-dialog-actions class="actions">
+        <ng-container *ngIf="createVersion?.enabled">
+            <mat-slide-toggle name="newVersion" color="primary" style="margin-left: -50px;"
+                [title]="'lang.newVersion' | translate"
+                [(ngModel)]="createVersion.default"
+                [checked]="createVersion.default">
+                {{'lang.newVersion' | translate}}
+            </mat-slide-toggle>
+            <div class="divider"></div>
+        </ng-container>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <button mat-raised-button  color="primary"
+                [disabled]="!modified || processing"
+                [title]="'lang.saveModifications' | translate"
+                (click)="saveFile()">
+                    {{ 'lang.validate' | translate }}
+            </button>
+            <button mat-raised-button  color="default"
+                [title]="'lang.cancel' | translate"
+                [disabled]="processing"
+                (click)="closeModal()">
+                    {{ 'lang.cancel' | translate }}
+            </button>
+        </div>
+    </div>
+</ng-container>

@@ -1,0 +1,119 @@
+<ng-container *ngIf="!loading">
+    <app-plugin-autocomplete
+        #test (triggerEvent)="addElem($event)"
+        *ngIf="adminMode && canUpdateRoles()"
+        [attr.aria-label]="'lang.addUserOrEntity' | translate"
+        [labelPlaceholder]="'lang.addUserOrEntity' | translate"
+        [routeDatas]="['/rest/autocomplete/users','/rest/autocomplete/entities']"
+        [subInfoKey]="'descriptionToDisplay'"
+        [targetSearchKey]="'idToDisplay'"
+        appearance="outline">
+    </app-plugin-autocomplete>
+    <div *ngIf="isEmptyList() && !loading" [title]="'lang.noDiffusionList' | translate"
+         aria-live="polite" role="status"
+         style="text-align:center;font-size:24px;font-weight:bold;opacity:0.3;">
+        {{ 'lang.noDiffusionList' | translate }}
+    </div>
+    <app-maarch-message *ngIf="hasNoDest" [content]="'lang.diffNoDestmsg' | translate" [mode]="'danger'"
+                        role="alert"></app-maarch-message>
+    <ng-container *ngFor="let role of availableRoles">
+        <mat-expansion-panel
+                *ngIf="diffList[role.id].items.length > 0"
+                [attr.aria-label]="role.label"
+                [expanded]="role.id === 'dest' || this.adminMode || expanded"
+                class="diffusionList">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    {{ role.label }}
+                    <ng-container *ngIf="role.id !== 'dest'">({{ diffList[role.id].items.length }})
+                    </ng-container>
+                </mat-panel-title>
+            </mat-expansion-panel-header>
+            <mat-list role="list">
+                <mat-list-item
+                        *ngFor="let diffusion of diffList[role.id].items;let i=index"
+                        class="item-diffusion-list"
+                        disableRipple
+                        role="listitem">
+                    <mat-icon
+                            [class.fa-sitemap]="diffusion.item_type === 'entity_id' || diffusion.item_type === 'entity'"
+                            [class.fa-user]="diffusion.item_type === 'user_id' || diffusion.item_type === 'user'"
+                            class="fa"
+                            color="primary"
+                            mat-list-icon>
+                    </mat-icon>
+                    <mat-icon *ngIf="diffusion.status === 'ABS'" [title]="'lang.absUser' | translate"
+                              aria-hidden="true"
+                              class="fas fa-circle"
+                              color="warn"
+                              mat-list-icon
+                              style="font-size: 10px; cursor: help"
+                    >
+                    </mat-icon>
+                    <div class="item-diffusion">
+                        <p [title]="diffusion.itemLabel" mat-line>{{ diffusion.itemLabel }}</p>
+                        <p [title]="diffusion.itemSubLabel" class="subInfo" mat-line>
+                            {{ diffusion.itemSubLabel }}</p>
+                    </div>
+                    <div *ngIf="role.id === 'dest' && target === 'redirect' && adminMode">
+                        <button (click)="loadDestUserList()" [matMenuTriggerFor]="menuDestUserList" mat-icon-button
+                                title="{{'lang.chooseAnotherEntityUser' | translate}}">
+                            <mat-icon aria-hidden="true" class="fa fa-edit" color="primary"></mat-icon>
+                        </button>
+                        <mat-menu #menuDestUserList="matMenu">
+                            <button
+                                    (click)="changeDest(userDest)"
+                                    *ngFor="let userDest of userDestList"
+                                    [title]="userDest.labelToDisplay"
+                                    mat-menu-item>
+                                <span>{{ userDest.labelToDisplay }}</span>
+                            </button>
+                        </mat-menu>
+                    </div>
+                    <div *ngIf="role.id !== 'dest' && adminMode && (diffusion.item_type === 'user_id' || diffusion.item_type === 'user')">
+                        <button
+                                [disabled]="!canUpdateRoles()"
+                                [matMenuTriggerFor]="menu"
+                                [title]="role.label" mat-button>{{ role.label }}
+                            <mat-icon
+                                    aria-hidden="true" class="fa fa-chevron-down">
+                            </mat-icon>
+                        </button>
+                        <mat-menu #menu="matMenu" [class]="'roleListMenu'">
+                            <ng-container *ngFor="let selectRole of availableRoles">
+                                <button (click)="changeRole(diffusion,role,selectRole)"
+                                        *ngIf="(selectRole.canUpdate && target !== 'redirect')  || (selectRole.id !== 'dest' && target === 'redirect' && selectRole.canUpdate)"
+                                        [title]="selectRole.label"
+                                        mat-menu-item
+                                        style="font-size:13px;">{{ selectRole.label }}
+                                </button>
+                            </ng-container>
+                        </mat-menu>
+                    </div>
+                    <div *ngIf="role.id !== 'dest' && adminMode">
+                        <button (click)="deleteItem(role.id,i)" [disabled]="!canUpdateRoles()" color="warn"
+                                mat-icon-button>
+                            <mat-icon aria-hidden="true" class="fa fa-trash" style="height:auto;"></mat-icon>
+                        </button>
+                    </div>
+                </mat-list-item>
+            </mat-list>
+        </mat-expansion-panel>
+    </ng-container>
+</ng-container>
+<div *ngIf="loading" style="display:flex;">
+    <mat-spinner aria-live="polite" role="status" style="margin:auto;"></mat-spinner>
+</div>
+<ng-container *ngIf="!loading && hasHistory">
+    <mat-divider></mat-divider>
+    <mat-expansion-panel style="box-shadow: none;">
+        <mat-expansion-panel-header>
+            <mat-panel-title [title]="'lang.showDiffusionHistory' | translate" color="primary">
+                {{ 'lang.showDiffusionHistory' | translate }}
+            </mat-panel-title>
+        </mat-expansion-panel-header>
+        <ng-template matExpansionPanelContent>
+            <app-history-diffusions-list [resId]="resId" style="display: contents;"></app-history-diffusions-list>
+        </ng-template>
+    </mat-expansion-panel>
+</ng-container>

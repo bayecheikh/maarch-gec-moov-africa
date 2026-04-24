@@ -1,0 +1,136 @@
+<ng-container *ngIf="loading">
+    <div *ngIf="loading" style="display:flex;height:100%;" class="loading">
+        <mat-spinner style="margin:auto;"></mat-spinner>
+    </div>
+</ng-container>
+<ng-container>
+    <div>
+        <mat-accordion>
+            <mat-expansion-panel
+                [expanded]="functionsService.empty(accessToken.token)"
+                [disabled]="loading || !functionsService.empty(accessToken.token)"
+            >
+                <mat-expansion-panel-header [title]="!functionsService.empty(accessToken.token) ? ('lang.cannotCreateAccessToken' | translate) : ('lang.createAccessTokenDesc' | translate)">
+                    <mat-panel-title>
+                        <mat-icon class="fas fa-fingerprint"></mat-icon> &nbsp; {{ 'lang.createAccessToken' | translate }}
+                    </mat-panel-title>
+                    <mat-panel-description>
+                        {{ 'lang.createAccessTokenDesc' | translate }}
+                    </mat-panel-description>
+                </mat-expansion-panel-header>
+                <form [formGroup]="accessTokenFormGroup" (ngSubmit)="generateAccessToken()">
+                    <mat-form-field appearance="fill">
+                        <mat-label>{{ 'lang.expirationDate' | translate }}</mat-label>
+                        <input matInput
+                            formControlName="expirationDate" name="expirationDate"
+                            [matDatepicker]="picker"
+                            [min]="minDate"
+                            [max]="maxDate"
+                            [title]="'lang.expirationDate' | translate"
+                            (focus)="picker.open()"
+                        >
+                        <mat-datepicker-toggle matSuffix [for]="picker" *ngIf="!accessTokenFormGroup.controls['expirationDate'].value">
+                        </mat-datepicker-toggle>
+                        <button *ngIf="accessTokenFormGroup.controls['expirationDate'].value"
+                            matSuffix
+                            mat-icon-button
+                            color="warn"
+                            [title]="'lang.eraseValue' | translate"
+                            (click)="$event.stopPropagation(); accessTokenFormGroup.controls['expirationDate'].setValue('')"
+                        >
+                            <mat-icon color="warn" class="fa fa-calendar-times">
+                            </mat-icon>
+                        </button>
+                    </mat-form-field>
+                    <div style="text-align:center;">
+                        <button mat-raised-button
+                            color="primary"
+                            type="submit"
+                            [disabled]="!accessTokenFormGroup.valid || loading">
+                            {{ 'lang.generateToken' | translate }}
+                        </button>
+                    </div>
+                    <mat-datepicker #picker></mat-datepicker>
+                </form>
+            </mat-expansion-panel>
+        </mat-accordion>
+    </div>
+    <div *ngIf="newAccessTokenCreated" style="margin-top: 25px;">
+        <app-maarch-message [mode]="'success'" [content]="'lang.newAccessTokenCreated' | translate">
+        </app-maarch-message>
+        <mat-form-field appearance="fill" style="margin-top: 10px; margin-bottom: -10px;">
+            <mat-label>{{ 'lang.token' | translate }}</mat-label>
+            <input matInput
+                readonly
+                name="token"
+                [value]="accessToken.token"
+                [type]="hideToken ? 'password' : 'text'"
+                [title]="'lang.token' | translate"
+            >
+            <button
+                style="font-size: 12px; margin-left: 10px"
+                matSuffix
+                mat-icon-button
+                name="showHideToken"
+                [title]="'lang.showHideToken' | translate"
+                (click)="$event.stopPropagation(); hideToken = !hideToken">
+                <mat-icon color="primary" style="cursor: pointer;" class="fas"
+                    [ngClass]="[hideToken ? 'fa-eye-slash' : 'fa-eye']">
+                </mat-icon>
+            </button>
+            <button
+                style="font-size: 13px; margin-left: 5px"
+                matSuffix
+                mat-icon-button
+                name="copyToken"
+                [title]="'lang.copyToken' | translate"
+                (click)="$event.stopPropagation(); copyToken(accessToken.token)">
+                <mat-icon color="primary" class="fas fa-copy"></mat-icon>
+            </button>
+        </mat-form-field>
+    </div>
+    <div *ngIf="!functionsService.empty(accessToken.token)" class="access-token-container">
+        <div class="access-token-container-title">
+            {{ 'lang.accessTokenInfo' | translate }}
+        </div>
+        <div
+            style="padding-top: 1.25em;width: 100%;">
+            <div class="row" style="margin-bottom: 10px;">
+                <div class="col-md-4">
+                    <span><b>{{ 'lang.creationDate' | translate }}</b></span>
+                </div>
+                <div class="col-md-4">
+                    <span><b>{{ 'lang.expirationDate' | translate }}</b></span>
+
+                </div>
+                <div class="col-md-4">
+                    <span><b>{{ 'lang.lastUsedDate' | translate }}</b></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <span>{{ accessToken.creationDate | fullDate }}</span>
+                </div>
+                <div class="col-md-4">
+                    <span>{{ accessToken.expirationDate | fullDate }}</span>
+
+                </div>
+                <div class="col-md-4">
+                    <span>{{ !accessToken.lastUsedDate ? ('lang.undefined' | translate) : (accessToken.lastUsedDate | fullDate) }}</span>
+                </div>
+            </div>
+            <div style="text-align:center; margin-top: 20px">
+                <button mat-raised-button
+                    color="warn"
+                    name="revokeAccessToken"
+                    [disabled]="loading"
+                    [title]="'lang.delete' | translate"
+                    (click)="revokeAccessToken()"
+                >
+                    {{ 'lang.delete' | translate }}
+                </button>
+            </div>
+        </div>
+    </div>
+</ng-container>

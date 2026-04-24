@@ -1,0 +1,278 @@
+<mat-sidenav-container autosize class="maarch-container">
+    <ng-template #adminMenuTemplate>
+        <mat-nav-list>
+            <h3 mat-subheader>{{ 'lang.actions' | translate }}</h3>
+            <a mat-list-item routerLink="/administration/contacts/list/new">
+                <mat-icon class="fa fa-plus" color="primary" mat-list-icon></mat-icon>
+                <p mat-line>
+                    {{ 'lang.add' | translate }}
+                </p>
+            </a>
+            <a (click)="openContactExport()" mat-list-item>
+                <mat-icon class="fa fa-file-export" color="primary" mat-list-icon></mat-icon>
+                <p mat-line>
+                    {{ 'lang.exportContacts' | translate }}
+                </p>
+            </a>
+            <a (click)="openContactImportModal()" mat-list-item>
+                <mat-icon class="fas fa-file-import" color="primary" mat-list-icon></mat-icon>
+                <p mat-line>
+                    {{ 'lang.importContacts' | translate }}
+                </p>
+            </a>
+        </mat-nav-list>
+        <mat-divider></mat-divider>
+        <mat-nav-list>
+            <a (click)="contactService.goTo(menu.route)" *ngFor="let menu of subMenus" [class.active]="menu.current"
+               mat-list-item>
+                <mat-icon [class]="menu.icon" color="primary" mat-list-icon></mat-icon>
+                <p mat-line>
+                    {{ menu.label }}
+                </p>
+            </a>
+        </mat-nav-list>
+    </ng-template>
+    <mat-sidenav-content>
+        <div class="bg-head">
+            <div [class.customContainerRight]="appService.getViewMode()" class="bg-head-title">
+                <div class="bg-head-title-label">
+                    <app-header-left></app-header-left>
+                </div>
+                <div class="bg-head-title-tool">
+                    <app-header-right></app-header-right>
+                </div>
+            </div>
+            <div [class.fullContainer]="appService.getViewMode()" class="bg-head-content">
+            </div>
+        </div>
+        <div [class.fullContainer]="appService.getViewMode()" class="container">
+            <div class="container-content">
+                <div *ngIf="isLoadingResults" class="example-loading-shade">
+                    <mat-spinner *ngIf="isLoadingResults"></mat-spinner>
+                </div>
+                <div class="tools-container">
+                    <div style="text-align: center;padding-left:5px;padding-right:5px;">
+                        <button [disabled]="!selection.hasValue()" [matMenuTriggerFor]="menuContact"
+                                class="action-button"
+                                color="primary" id="menuButton"
+                                mat-stroked-button>
+                            {{ 'lang.actions' | translate }}
+                            <mat-icon aria-hidden="true" class="fa fa-chevron-down"
+                                      style="color:#d9d9d9;width: auto;height:auto;">
+                            </mat-icon>
+                        </button>
+                        <span #contextMenuContact [matMenuTriggerFor]="menuContactContext"
+                              [style.left]="contextMenuPosition.x"
+                              [style.top]="contextMenuPosition.y"
+                              id="menuButtonContext" style="position: fixed;"></span>
+                        <mat-menu #menuContact="matMenu">
+                            <div
+                                    style="text-align: center;font-size: 10px;color: white;background: #135F7F;padding: 5px;font-weight: bold;">
+                                {{ selection.selected.length }} {{ 'lang.selectedContacts' | translate }}
+                            </div>
+                            <button (click)="mergeContacts(selection)" [disabled]="selection.selected.length < 2"
+                                    mat-menu-item>{{ 'lang.merge' | translate }}
+                            </button>
+                            <button (click)="openContactsGroupModal()"
+                                    mat-menu-item>{{ 'lang.newCorrespondentsGroup' | translate }}
+                            </button>
+                            <button (menuOpened)="getCorrespondentsGroups()"
+                                    [matMenuTriggerFor]="correspondentsGroupMenu"
+                                    mat-menu-item>{{ 'lang.associateToCorrespondentsGroup' | translate }}
+                            </button>
+                        </mat-menu>
+                        <mat-menu #menuContactContext="matMenu">
+                            <div
+                                    style="text-align: center;font-size: 10px;color: white;background: #135F7F;padding: 5px;font-weight: bold;">
+                                {{ selection.selected.length }} {{ 'lang.selectedContacts' | translate }}
+                            </div>
+                            <button (click)="mergeContacts(selection)" [disabled]="selection.selected.length < 2"
+                                    mat-menu-item>{{ 'lang.merge' | translate }}
+                            </button>
+                            <button (click)="openContactsGroupModal()"
+                                    mat-menu-item>{{ 'lang.newCorrespondentsGroup' | translate }}
+                            </button>
+                            <button (menuOpened)="getCorrespondentsGroups()"
+                                    [matMenuTriggerFor]="correspondentsGroupMenu"
+                                    mat-menu-item>{{ 'lang.associateToCorrespondentsGroup' | translate }}
+                            </button>
+                        </mat-menu>
+                        <mat-menu #correspondentsGroupMenu="matMenu" [class]="'correspondentsGroupMenuMenu'">
+                            <div (click)="$event.stopPropagation();"
+                                 style="text-align: center;font-size: 10px;color: white;background: #135F7F;padding: 5px;font-weight: bold;position: sticky;top: 0px;z-index: 1;">
+                                {{ 'lang.correspondentsGroups' | translate }}
+                            </div>
+                            <mat-form-field (click)="$event.stopPropagation();" appearance="outline" class="smallInput"
+                                            floatLabel="never">
+                                <mat-icon class="fa fa-search" color="primary" matPrefix></mat-icon>
+                                <input [formControl]="filterCorrespondentsGroups" [placeholder]="'Filtrer'" matInput
+                                       type="text">
+                            </mat-form-field>
+                            <ng-container *ngFor="let group of filteredCorrespondentsGroups | async | sortBy : 'label'">
+                                <button (click)="addContactsToCorrespondentsGroup(group.id)"
+                                        mat-menu-item>{{ group.label }}
+                                </button>
+                            </ng-container>
+                            <div *ngIf="correspondentsGroups.length === 0">
+                                <span [title]="'lang.noData' | translate"
+                                      class="noData">{{ 'lang.noData' | translate }}</span>
+                            </div>
+                        </mat-menu>
+                    </div>
+                    <div>
+                        <mat-form-field floatLabel="never" style="font-size: 13px;">
+                            <input #autoCompleteInput (click)="$event.stopPropagation()" [formControl]="searchContact"
+                                   [placeholder]="'lang.filterBy' | translate"
+                                   matInput maxlength="128" type="text">
+                            <button (click)="searchContact.setValue('')" *ngIf="searchContact.value"
+                                    [title]="'lang.clearFilter' | translate" aria-label="Clear" mat-button
+                                    mat-icon-button matSuffix>
+                                <mat-icon class="fas fa-times" style="color:#B3B3B3"></mat-icon>
+                            </button>
+                        </mat-form-field>
+                    </div>
+                    <div>
+                        <div class="table-head table-head-tool">
+                            <span style="position: relative;">
+                                <mat-paginator #paginator (page)="handlePageEvent($event)"
+                                               [hidePageSize]="resultsLength === 0"
+                                               [length]="resultsLength"
+                                               [pageSizeOptions]="[10, 25, 50, 100, 150]"
+                                               [pageSize]="10">
+                                </mat-paginator>
+                                <app-select-page [class.noResult]="resultsLength === 0"
+                                                 [paginator]="paginator"></app-select-page>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mat-table-container">
+                    <mat-table #tableContactListSort="matSort" [dataSource]="data" id="contact-list" matSort
+                               matSortDisableClear style="width:100%;">
+                        <ng-container matColumnDef="select">
+                            <mat-header-cell *matHeaderCellDef
+                                             style="width:60px;flex: initial;align-items: center;display: flex;">
+                                <!--<mat-checkbox color="primary" (click)="$event.stopPropagation()"
+                                    (change)="$event ? selectAllContacts() : null"
+                                    [checked]="selection.hasValue() && isAllSelected()"
+                                    [indeterminate]="selection.hasValue() && !isAllSelected()">
+                                </mat-checkbox>-->
+                            </mat-header-cell>
+                            <mat-cell (click)="$event.stopPropagation()" *matCellDef="let element"
+                                      style="width:60px;flex: initial;align-items: center;display: flex;">
+                                <mat-checkbox (change)="$event ? selectContact(element.id) : null"
+                                              (click)="$event.stopPropagation()"
+                                              [checked]="selection.isSelected(element.id)"
+                                              color="primary">
+                                </mat-checkbox>
+                            </mat-cell>
+                        </ng-container>
+                        <ng-container matColumnDef="filling">
+                            <mat-header-cell *matHeaderCellDef [class.hide-for-mobile]="appService.getViewMode()"
+                                             style="flex: initial;width: 60px;">
+                            </mat-header-cell>
+                            <mat-cell *matCellDef="let element" [class.hide-for-mobile]="appService.getViewMode()"
+                                      mat-cell
+                                      style="flex: initial;width: 60px;">
+                                <mat-icon
+                                        [title]="('lang.contactFilledTo' | translate) + ' ' + element.filling.rate + '%'"
+                                        class="fas fa-circle threshold_{{element.filling.thresholdLevel}}"></mat-icon>
+                            </mat-cell>
+                        </ng-container>
+                        <ng-container matColumnDef="confidentiality">
+                            <mat-header-cell
+                                    *matHeaderCellDef
+                                    [class.hide-for-mobile]="appService.getViewMode()"
+                                    [ngStyle]="{'margin-left': displayedColumnsContact.includes('filling') ? '-20px' : '5px'}"
+                                    style="flex: initial; width: 30px; margin-right: 20px;"
+                            >
+                            </mat-header-cell>
+                            <mat-cell *matCellDef="let element" [class.hide-for-mobile]="appService.getViewMode()"
+                                      [ngStyle]="{'margin-left': displayedColumnsContact.includes('filling') ? '-20px' : '5px'}"
+                                      mat-cell
+                                      style="flex: initial; width: 30px; margin-right: 20px;"
+                            >
+                                <mat-icon *ngIf="isConfidentialContact(element)"
+                                          [title]="'lang.confidentialContact' | translate"
+                                          aria-hidden="true"
+                                          class="fas fa-user-lock"
+                                          style="color: gray">
+                                </mat-icon>
+                            </mat-cell>
+                        </ng-container>
+                        <ng-container matColumnDef="firstname">
+                            <mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'lang.firstname' | translate }}
+                            </mat-header-cell>
+                            <mat-cell *matCellDef="let element" mat-cell>
+                                {{ element.firstname }}
+                            </mat-cell>
+                        </ng-container>
+                        <ng-container matColumnDef="lastname">
+                            <mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'lang.lastname' | translate }}
+                            </mat-header-cell>
+                            <mat-cell *matCellDef="let element">
+                                {{ element.lastname }}
+                            </mat-cell>
+                        </ng-container>
+                        <ng-container matColumnDef="company">
+                            <mat-header-cell *matHeaderCellDef mat-sort-header>
+                                {{ 'lang.contactsParameters_company' | translate }}
+                            </mat-header-cell>
+                            <mat-cell *matCellDef="let element">
+                                {{ element.company }}
+                            </mat-cell>
+                        </ng-container>
+                        <ng-container matColumnDef="formatedAddress">
+                            <mat-header-cell *matHeaderCellDef [class.hide-for-mobile]="appService.getViewMode()"
+                                             style="flex: 2;">
+                                {{ 'lang.address' | translate }}
+                            </mat-header-cell>
+                            <mat-cell *matCellDef="let element"
+                                      [class.hide-for-mobile]="appService.getViewMode()"
+                                      [title]="element.formatedAddress"
+                                      style="flex: 2;">
+                                {{ element.formatedAddress }}
+                            </mat-cell>
+                        </ng-container>
+                        <ng-container matColumnDef="actions">
+                            <mat-header-cell *matHeaderCellDef>
+                            </mat-header-cell>
+                            <mat-cell *matCellDef="let element" style="justify-content: flex-end;">
+                                <button (click)="$event.stopPropagation();toggleContact(element)"
+                                        *ngIf="element.enabled" [title]="'lang.suspend' | translate"
+                                        color="primary"
+                                        mat-icon-button>
+                                    <mat-icon aria-hidden="true" class="fa fa-pause fa-2x"></mat-icon>
+                                </button>
+                                <button (click)="$event.stopPropagation();toggleContact(element)"
+                                        *ngIf="!element.enabled" [title]="'lang.authorize' | translate"
+                                        color="accent"
+                                        mat-icon-button>
+                                    <mat-icon aria-hidden="true" class="fa fa-check fa-2x"></mat-icon>
+                                </button>
+                                <button (click)="$event.stopPropagation();deleteContact(element)"
+                                        [title]="'lang.delete' | translate" color="warn"
+                                        data-target="#changeDiffListDest" data-toggle="modal"
+                                        mat-icon-button>
+                                    <mat-icon class="fa fa-trash-alt fa-2x"></mat-icon>
+                                </button>
+                            </mat-cell>
+                        </ng-container>
+                        <mat-header-row *matHeaderRowDef="displayedColumnsContact"></mat-header-row>
+                        <mat-row (contextmenu)="open($event, row);"
+                                 *matRowDef="let row; columns: displayedColumnsContact;"
+                                 [class.selected]="selection.isSelected(row.id)"
+                                 routerLink="/administration/contacts/list/{{row.id}}" style="cursor: pointer;">
+                        </mat-row>
+                    </mat-table>
+                    <div class="mat-paginator"
+                         style="min-height:48px;display: flex;justify-content: end;align-items: center;padding-right: 20px;">
+                        {{ resultsLength }} {{ 'lang.contactsAlt' | translate }}
+                    </div>
+                </div>
+                <div class="table-head">
+                </div>
+            </div>
+        </div>
+    </mat-sidenav-content>
+</mat-sidenav-container>

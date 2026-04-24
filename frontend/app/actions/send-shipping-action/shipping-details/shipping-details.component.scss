@@ -1,0 +1,45 @@
+.header-container {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-left: 19px;
+  background: var(--maarch-color-primary);
+  padding-left: 17px;
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+
+  span {
+    flex: 1;
+  }
+
+  button {
+    color: white;
+    font-size: 20px;
+    margin-right: 28px;
+  }
+}
+
+.header-content {
+  display: flex;
+  margin-top: 10px;
+  background: var(--maarch-color-primary-opacity-10);
+  align-content: center;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  margin-left: 18px;
+  padding: 5px;
+  font-weight: bold;
+}
+
+.shipping-content {
+  display: flex;
+  flex-wrap: nowrap;
+  margin-left: 48px;
+  align-content: center;
+  justify-content: space-between;
+  margin-right: 22px;
+  padding: 5px;
+  align-items: center;
+}

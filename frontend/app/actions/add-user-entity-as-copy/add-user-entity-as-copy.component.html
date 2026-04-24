@@ -1,0 +1,103 @@
+<div class="mat-dialog-content-container">
+    <h1 mat-dialog-title>{{ data.action.label }}</h1>
+    <div mat-dialog-content>
+        <div *ngIf="loading" class="loading" style="display:flex;height:100%;">
+            <mat-spinner style="margin:auto;"></mat-spinner>
+        </div>
+        <app-maarch-message *ngIf="!loading && !hasPrivilege()"
+            [mode]="'danger'"
+            [content]="'lang.cannotUpdateDiffusionList' | translate">
+        </app-maarch-message>
+        <mat-sidenav-container *ngIf="hasPrivilege()"
+            autosize style="height:100%;">
+            <mat-sidenav-content style="background: white;padding:10px;">
+                <div>
+                    {{'lang.makeActionOn' | translate}}
+                    <b *ngIf="data.resIds.length === 0" color="primary"
+                        class="highlight">{{'lang.currentIndexingMail' | translate}}</b>
+                    <b *ngIf="data.resIds.length === 1" color="primary" class="highlight">{{data.resource.chrono}}</b>
+                    <b *ngIf="data.resIds.length > 1" color="primary" class="highlight">{{data.resIds.length}}
+                        {{'lang.elements' | translate}}</b> ?
+                </div>
+
+                <div *ngIf="resourcesErrors.length > 0" class="alert-message alert-message-danger mailList"
+                    role="alert">
+                    <p>
+                        {{'lang.canNotMakeAction' | translate}} :
+                    </p>
+                    <ul>
+                        <li *ngFor="let ressource of resourcesErrors">
+                            <b>{{ressource.alt_identifier}}</b> : {{'lang.' + ressource.reason | translate}}
+                        </li>
+                    </ul>
+                </div>
+                <div *ngIf="resourcesWarnings.length > 0" class="alert-message alert-message-info mailList"
+                    role="alert">
+                    <ul style="margin: 0;padding-bottom: 0px;">
+                        <li *ngFor="let ressource of resourcesWarnings">
+                            <b>{{ressource.alt_identifier}}</b> : {{'lang.' + ressource.reason | translate}}
+                        </li>
+                    </ul>
+                </div>
+                <app-plugin-autocomplete
+                    appearance="ouline"
+                    [labelPlaceholder]="'lang.addUserOrEntity' | translate"
+                    [routeDatas]="['/rest/autocomplete/users','/rest/autocomplete/entities']"
+                    [targetSearchKey]="'idToDisplay'"
+                    [subInfoKey]="'descriptionToDisplay'"
+                    (triggerEvent)="addElem($event)">
+                </app-plugin-autocomplete>
+
+                <mat-list>
+                    <mat-list-item disableRipple class="item-diffusion-list"
+                        *ngFor="let diffusion of usersEntitiesAsCopy; let i=index">
+                        <mat-icon mat-list-icon color="primary" class="fa" style="font-size: 18px; margin-right: 5px"
+                            [class.fa-user]="diffusion?.item_type === 'user_id' || diffusion?.type === 'user'"
+                            [class.fa-sitemap]="diffusion?.item_type === 'entity_id' || diffusion?.type === 'entity'">
+                        </mat-icon>
+                        <mat-icon *ngIf="diffusion?.status === 'ABS'"
+                            mat-list-icon
+                            name="abs"
+                            class="fas fa-circle"
+                            color="warn"
+                            style="font-size: 10px; cursor: help"
+                            [title]="'lang.absUser' | translate"
+                        >
+                        </mat-icon>
+                        <div class="item-diffusion">
+                            <p mat-line [title]="diffusion.idToDisplay">
+                                {{ diffusion.idToDisplay }}
+                            </p>
+                            <p mat-line class="subInfo" [title]="diffusion.descriptionToDisplay">
+                                {{ diffusion.descriptionToDisplay }}</p>
+                        </div>
+                        <div>
+                            <button mat-icon-button color="warn"
+                                [title]="'lang.delete' | translate"
+                                (click)="deleteItem(diffusion)"
+                            >
+                                <mat-icon class="fa fa-trash" style="height:auto;"></mat-icon>
+                            </button>
+                        </div>
+                    </mat-list-item>
+                </mat-list>
+
+                <app-note-editor #noteEditor [resIds]="data.resIds"></app-note-editor>
+
+                <div *ngIf="showToggle" class="row" style="margin: 10px 0px 10px 0px;">
+                    <mat-slide-toggle name="history" color="primary" style="margin-bottom: 15px;"
+                        [title]="'lang.canGoToNextResDesc' | translate" [(ngModel)]="canGoToNextRes" [checked]="canGoToNextRes">
+                        {{'lang.canGoToNextRes' | translate}}
+                    </mat-slide-toggle>
+                    <mat-divider></mat-divider>
+                </div>
+            </mat-sidenav-content>
+        </mat-sidenav-container>
+    </div>
+    <span class="divider-modal"></span>
+    <div mat-dialog-actions class="actions">
+        <button mat-raised-button mat-button color="primary" [disabled]="loading || !isValidAction()"
+            (click)="onSubmit()">{{'lang.validate' | translate}}</button>
+        <button mat-raised-button mat-button [disabled]="loading" [mat-dialog-close]="">{{'lang.cancel' | translate}}</button>
+    </div>
+</div>

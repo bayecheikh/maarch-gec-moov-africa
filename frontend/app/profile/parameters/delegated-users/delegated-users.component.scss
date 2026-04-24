@@ -1,0 +1,39 @@
+.select-container {
+    display: flex;
+    justify-content: flex-start;
+    flex-direction: row;
+    align-items: center;
+    width: 30%;
+    margin-bottom: 20px;
+}
+
+.users-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 30%;
+}
+
+.user-name {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 15px;
+    margin-left: 10px;
+    font-size: 17px;
+}
+
+.user-item {
+    display: flex;
+    align-items: center;
+     .mat-checkbox {
+        flex: 1;
+    }
+}
+
+.user-item-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 15px;
+}

@@ -1,0 +1,177 @@
+<div class="mat-dialog-content-container">
+    <h1 mat-dialog-title>
+        <span [title]="data.title" style="flex: 1;">
+            {{ data.title }}
+        </span>
+        <button (click)="dialogRef.close()" [title]="'lang.saveAndClose' | translate" mat-icon-button>
+            <mat-icon aria-hidden="true" class="fa fa-times"></mat-icon>
+        </button>
+    </h1>
+    <mat-dialog-content class="modal-container">
+        <div *ngIf="loading" class="loading">
+            <mat-spinner aria-live="polite" role="status" style="margin:auto;"></mat-spinner>
+        </div>
+        <ng-container *ngIf="!loading">
+            <div class="formType" style="margin-top: 20px;">
+                <div [title]="'lang.contactInformationAndDate' | translate" class="formType-title">
+                    {{ 'lang.contactInformationAndDate' | translate }}
+                </div>
+                <div class="row">
+                    <div class="form-group">
+                        <div class="col-md-4">
+                            <mat-form-field>
+                                <mat-label [title]="'lang.sender' | translate">{{ 'lang.sender' | translate }}
+                                </mat-label>
+                                <input [(ngModel)]="data.shippingData.sender" [placeholder]="'lang.sender' | translate"
+                                       [title]="data.shippingData.sender"
+                                       disabled
+                                       id="sender"
+                                       matInput>
+                            </mat-form-field>
+                        </div>
+                        <div class="col-md-4">
+                            <mat-form-field>
+                                <mat-label
+                                        [title]="'lang.creationDate' | translate">{{ 'lang.creationDate' | translate }}
+                                </mat-label>
+                                <input [(ngModel)]="creationDate" [placeholder]="'lang.creationDate' | translate" [title]="creationDate" disabled
+                                       matInput>
+                            </mat-form-field>
+                        </div>
+                        <div class="col-md-4">
+                            <mat-form-field>
+                                <mat-label [title]="'lang.sendDate' | translate">{{ 'lang.sendDate' | translate }}
+                                </mat-label>
+                                <input [(ngModel)]="sendDate" [placeholder]="'lang.sendDate' | translate" [title]="sendDate" disabled
+                                       matInput>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                </div>
+                <div class="row recipients">
+                    <mat-label>{{ 'lang.recipient' | translate }}</mat-label>
+                    <br>
+                    <mat-chip-list style="margin: 5px; padding: 5px;">
+                        <mat-chip *ngFor="let recipient of data.shippingData.recipients; let i = index" [title]="recipient"
+                                  class="matChip">
+                            <div [innerHTML]="recipient" style="white-space: pre-wrap;"></div>
+                        </mat-chip>
+                    </mat-chip-list>
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                <div *ngIf="!functions.empty(depositProof)" class="col-md-6">
+                    <mat-label class="typeFileTitle">{{ 'lang.depositProof' | translate }}</mat-label>
+                    <br>
+                    <mat-chip-list class="mat-chip-list-stacked itemChip" style="margin-top: 2px; padding: 5px;">
+                        <mat-chip [title]="'lang.depositProofShipping' | translate"
+                                  class="listAutocomplete">
+                            <span style="display: flex;flex: 1;align-items: center;">
+                                <i class="fa fa-box"
+                                   style="padding-right:5px;"></i>&nbsp;{{ 'lang.depositProof' | translate }}
+                            </span>
+                            <mat-icon (click)="downloadFile(this.depositProof.resId)" [title]="'lang.downloadFile' | translate"
+                                      aria-hidden="true" class="fas fa-download"
+                                      color="primary"
+                                      style="margin-top: 8px; cursor: pointer;"></mat-icon>
+                        </mat-chip>
+                    </mat-chip-list>
+                </div>
+                <div *ngIf="shippingAttachments.length > 0" class="col-md-6">
+                    <mat-label class="typeFileTitle">{{ 'lang.attachments' | translate }}</mat-label>
+                    <br>
+                    <mat-chip-list class="mat-chip-list-stacked itemChip" style="margin-top: 2px; padding: 5px;">
+                        <mat-chip *ngFor="let attachment of shippingAttachments; let i = index"
+                                  [title]="attachment.title" class="listAutocomplete">
+                            <span [title]="attachment.title" style="display: flex;flex: 1;align-items: center;">
+                                <i class="fa fa-paperclip" style="padding-right:5px;"></i>&nbsp;{{ attachment.title }}&nbsp; <span
+                                    class="fileSize">({{ functions.formatBytes(attachment.filesize) }})</span>
+                            </span>
+                            <mat-icon (click)="$event.stopPropagation(); downloadFile(attachment.resId)" [title]="'lang.downloadFile' | translate"
+                                      aria-hidden="true" class="fas fa-download"
+                                      color="primary"
+                                      style="margin-top: 8px; cursor: pointer;"></mat-icon>
+                        </mat-chip>
+                    </mat-chip-list>
+                </div>
+            </div>
+            <br>
+            <div *ngIf="data.shippingData?.sendMode !== 'ere'" class="row">
+                <mat-divider></mat-divider>
+                <mat-expansion-panel style="box-shadow: none;">
+                    <mat-expansion-panel-header>
+                        <mat-panel-title color="primary">
+                            {{ 'lang.showShippingHistory' | translate }}
+                        </mat-panel-title>
+                    </mat-expansion-panel-header>
+                    <ng-template matExpansionPanelContent>
+                        <ng-container *ngIf="!loading">
+                            <ng-container *ngFor="let history of shippingHistory">
+                                <mat-list>
+                                    <div class="dateTitle">
+                                        <div [title]="setStatus(history.status)" class="primary" mat-subheader>
+                                            {{ 'lang.status' | translate }}:&nbsp;<b>{{ setStatus(history.status) }}</b>
+                                        </div>
+                                        <mat-divider></mat-divider>
+                                    </div>
+                                    <mat-list-item class="history" disableRipple>
+                                        <mat-icon aria-hidden="true" class="fas fa-2x fa-shipping-fast" color="primary"
+                                                  mat-list-icon>
+                                        </mat-icon>
+                                        <div class="historyLine" mat-line>
+                                            <div class="historyLineContainer">
+                                                <div [title]="'lang.' + history.eventType | translate"
+                                                     class="historyLineLabel">
+                                                    <b>{{ 'lang.' + history.eventType | translate }}</b>
+                                                </div>
+                                                <div [title]="formatDate(history.eventDate)"
+                                                     class="historyLineSubLabel">
+                                                    <b>{{ formatDate(history.eventDate) }}</b>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </mat-list-item>
+                                </mat-list>
+                            </ng-container>
+                            <ng-container *ngIf="shippingHistory.length === 0">
+                                <div class="historyLine" mat-line style="font-style: italic; color: gray;">
+                                    {{ 'lang.emptyShippingHistory' | translate }}
+                                </div>
+                            </ng-container>
+                        </ng-container>
+                    </ng-template>
+                </mat-expansion-panel>
+            </div>
+            <div *ngIf="data.shippingData?.sendMode === 'ere'" class="formType"
+                 style="margin-top: -15px; margin-bottom: 15px;">
+                <div class="formType-title">
+                    {{ 'lang.proofsOfShipment' | translate }}
+                </div>
+                <div class="download-proofs">
+                    <button (click)="downloadProof('depositProof')" [disabled]="downloadingProofs"
+                            [title]="'lang.downloadDepositProof' | translate"
+                            color="primary"
+                            mat-button
+                            name="downloadDepositProof">
+                        <mat-icon aria-hidden="true" class="fa fa-download" style="height:auto"></mat-icon>
+                        {{ 'lang.downloadDepositProof' | translate }}
+                    </button>
+                    <button (click)="downloadProof('proofOfReceipt')" [disabled]="downloadingProofs"
+                            [title]="'lang.downloadProofOfReceipt' | translate"
+                            color="primary"
+                            mat-button
+                            name="downloadProofOfReceipt">
+                        <mat-icon aria-hidden="true" class="fa fa-download" style="height:auto"></mat-icon>
+                        {{ 'lang.downloadProofOfReceipt' | translate }}
+                    </button>
+                </div>
+            </div>
+            <div class="actions" mat-dialog-actions>
+                <button [disabled]="loading" [mat-dialog-close]="" mat-button
+                        mat-raised-button>{{ 'lang.close' | translate }}
+                </button>
+            </div>
+        </ng-container>
+    </mat-dialog-content>
+</div>

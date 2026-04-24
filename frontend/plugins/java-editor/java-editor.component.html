@@ -1,0 +1,19 @@
+<div class="editInProgress">
+    <div class="editInProgressMsg">
+        <i *ngIf="editInProgress" class="fas fa-file-word bounce"></i>
+        <i *ngIf="!editInProgress && !loading" class="fa-solid fa-check"></i>
+
+        <div *ngIf="editInProgress">
+            {{'lang.editInProgress' | translate}}
+        </div>
+        <div *ngIf="!editInProgress && loading" style="font-weight: bold;">
+            {{'lang.' + 'environmentInitialize' | translate}}...
+        </div>
+        <div *ngIf="!editInProgress && !loading" style="font-weight: bold;">
+            {{'lang.' + 'editionEnded' | translate}}
+        </div>
+    </div>
+    <div *ngIf="!hideCancelButton">
+        <button mat-button (click)="closeEditor()">{{'lang.cancel' | translate}}</button>
+    </div>
+</div>

@@ -1,0 +1,59 @@
+
+<div style="padding: 10px; margin: 15px;">
+    <div>
+        <app-plugin-autocomplete
+            [labelPlaceholder]="'lang.delegatedUsers' | translate"
+            [routeDatas]="['/rest/autocomplete/users']"
+            [targetSearchKey]="'idToDisplay'"
+            [subInfoKey]="'descriptionToDisplay'"
+            [disableItems]="getDisabledItems()"
+            (triggerEvent)="addUser($event)"
+            appearance="outline">
+        </app-plugin-autocomplete>
+    </div>
+    <div *ngIf="delegatedUsers.length > 0">
+        <div class="select-container">
+            <mat-checkbox color="primary" style="flex: 1"
+            (change)="toggleAll()"
+            [checked]="allSelected()"
+            [indeterminate]="oneOrMoreSelected()"
+            [title]="'lang.selectAll' | translate">
+            <span syle="color: gray !important">{{ 'lang.selectAll' | translate }}</span>
+            </mat-checkbox>
+            <div *ngIf="atLeastOneDelegated()">
+                <button mat-icon-button
+                    color="warn"
+                    [title]="'lang.delete' | translate"
+                    (click)="removeUser()"
+                >
+                    <mat-icon class="fa fa-trash"></mat-icon>
+                </button>
+            </div>
+        </div>
+        <div class="users-container">
+            <div *ngFor="let user of delegatedUsers" class="user-item">
+                <mat-checkbox
+                    [id]="user.id" color="primary"
+                    [checked]="user.checked"
+                    [title]="user.fullName"
+                    (click)="$event.stopPropagation()"
+                    (change)="$event ? user.checked = !user.checked : null">
+                    <div class="user-item-container">
+                        <div class="user-name" [title]="user.fullName">
+                            <mat-icon class="fas fa-user"></mat-icon>
+                            <span>{{ user.fullName }}</span>
+                        </div>
+                    </div>
+                </mat-checkbox>
+                <button class="delete-user"
+                    mat-icon-button
+                    color="warn"
+                    [title]="'lang.delete' | translate"
+                    (click)="$event.stopPropagation(); removeUser(user)"
+                >
+                    <mat-icon class="fa fa-trash" aria-hidden="true"></mat-icon>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

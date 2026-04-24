@@ -1,0 +1,21 @@
+<div class="mat-dialog-content-container">
+    <h1 mat-dialog-title style="display: flex;">
+        <span style="flex: 1;text-align: center;">{{title}}</span>
+        <button title="{{'lang.close' | translate}}" mat-icon-button (click)="editorManager?.closeModal()">
+            <mat-icon class="fa fa-times-circle fa-2x"></mat-icon>
+        </button>
+    </h1>
+    <mat-dialog-content style="padding: 0">
+        <app-editor-manager
+            #editorManager
+            [resId]="data.resId"
+            [isAttachment]="data.isAttachment"
+            [createVersion]="data.createVersion"
+            [unannotatedVersion]="unannotatedVersion"
+            (metaDataLoaded)="title=$event"
+            (fileSaved)="closeModal('fileSaved')"
+            (processError)="closeModal('')"
+            (closeModalEvent)="closeModal('')"
+            ></app-editor-manager>
+    </mat-dialog-content>
+</div>

@@ -1,0 +1,122 @@
+<div class="book-footer-actions">
+    <div *ngIf="loading">
+        <mat-spinner aria-hidden="true" class="spinner-white" diameter="50"></mat-spinner>
+    </div>
+    <ng-container *ngIf="!loading">
+        <button
+                (click)="$event.stopPropagation(); processAction(selectedValidationAction)"
+                *ngIf="!functions.empty(selectedValidationAction)"
+                [attr.aria-label]="selectedValidationAction.label"
+                [title]="selectedValidationAction.label"
+                class="action-button action-button-valid"
+                mat-stroked-button
+        >
+            <div class="action-button-button-label">
+                <mat-icon aria-hidden="true" class="fa fa-thumbs-up"></mat-icon>
+                <span>
+            {{ selectedValidationAction.label | shorten: 45: '...' }}
+        </span>
+            </div>
+        </button>
+        <ng-container *ngIf="validationActions.length > 1">
+            <button
+                #menuTrigger="matMenuTrigger"
+                (click)="$event.stopPropagation()"
+                (mousedown)="$event.preventDefault()"
+                [attr.aria-expanded]="menuTrigger.menuOpen"
+                [attr.aria-label]="'lang.moreActions' | translate"
+                [matMenuTriggerFor]="menuValidationActions"
+                [title]="'lang.moreActions' | translate"
+                aria-haspopup="menu"
+                class="more-actions more-actions-valid"
+                mat-icon-button
+            >
+                <mat-icon aria-hidden="true" class="fa fa-chevron-up"></mat-icon>
+            </button>
+            <mat-menu #menuValidationActions="matMenu" yPosition="above">
+                <ng-container *ngFor="let action of validationActions; let i = index">
+                    <button (click)="$event.stopPropagation(); selectedValidationAction = action; menuTrigger.closeMenu()"
+                            *ngIf="action.id !== selectedValidationAction.id"
+                            [attr.aria-label]="action.label"
+                            [title]="action.label"
+                            class="more-actions-valid-item"
+                            mat-menu-item>
+                        {{ action.label }}
+                    </button>
+                </ng-container>
+            </mat-menu>
+        </ng-container>
+        <button (click)="processAction(selectedRefusalAction)"
+                *ngIf="!functions.empty(selectedRefusalAction)"
+                [attr.aria-label]="selectedRefusalAction.label"
+                [title]="selectedRefusalAction.label"
+                class="action-button action-button-reject"
+                mat-stroked-button
+        >
+            <div [title]="selectedRefusalAction.label" class="action-button-button-label">
+                <mat-icon aria-hidden="true" class="fa fa-thumbs-down"></mat-icon>
+                <span>
+                    {{ selectedRefusalAction.label | shorten: 45: '...' }}
+                </span>
+            </div>
+        </button>
+        <ng-container *ngIf="refusalActions.length > 1">
+            <button
+                #menuTrigger="matMenuTrigger"
+                (click)="$event.stopPropagation()"
+                (mousedown)="$event.preventDefault()"
+                [attr.aria-expanded]="menuTrigger.menuOpen"
+                [attr.aria-label]="'lang.moreActions' | translate"
+                [matMenuTriggerFor]="menuRefusalActions"
+                [title]="'lang.moreActions' | translate"
+                aria-haspopup="menu"
+                class="more-actions more-actions-reject"
+                mat-icon-button
+            >
+                <mat-icon aria-hidden="true" class="fa fa-chevron-up"></mat-icon>
+            </button>
+            <mat-menu #menuRefusalActions="matMenu" yPosition="above">
+                <ng-container *ngFor="let action of refusalActions; let i = index">
+                    <button (click)="$event.stopPropagation(); selectedRefusalAction = action; menuTrigger.closeMenu()"
+                            *ngIf="action.id !== selectedRefusalAction.id"
+                            [attr.aria-label]="action.label"
+                            [title]="action.label"
+                            class="more-actions-reject-item"
+                            mat-menu-item>
+                        {{ action.label }}
+                    </button>
+                </ng-container>
+            </mat-menu>
+        </ng-container>
+    </ng-container>
+</div>
+<div *ngIf="!functions.empty(signatureBookService.selectedDocToSign.attachment)" class="book-footer-stamps">
+    <div *ngIf="userStamp === undefined">
+        <mat-spinner aria-hidden="true" class="spinner-white" diameter="50"></mat-spinner>
+    </div>
+    <div *ngIf="userStamp !== undefined" class="sign-button-container">
+        <ng-container *ngIf="canShowStamps()">
+            <button
+                    (click)="signWithStamp(userStamp)"
+                    *ngIf="userStamp?.contentUrl"
+                    [attr.aria-label]="'lang.applyStamp' | translate"
+                    [style.backgroundImage]="'url(' + (userStamp?.contentUrl | secureUrl | async) + ')'"
+                    [title]="'lang.applyStamp' | translate"
+                    class="sign-button"
+                    mat-button
+            ></button>
+            <button (click)="openSignaturesList()" *ngIf="userStamp !== undefined"
+                    [attr.aria-label]="'lang.displayStampsList' | translate"
+                    [title]="'lang.displayStampsList' | translate"
+                    class="open-sign-list-button"
+                    mat-button>
+                <mat-icon aria-hidden="true" class="fa fa-angle-right"></mat-icon>
+            </button>
+        </ng-container>
+        <ng-container *ngIf="!canShowStamps()">
+            <div [title]="'lang.stampIsDisabled' | translate" class="sign-button-not-allowed">
+                <mat-icon aria-hidden="true" class="fa-solid fa-ban"></mat-icon>
+            </div>
+        </ng-container>
+    </div>
+</div>

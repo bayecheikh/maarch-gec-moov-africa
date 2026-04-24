@@ -1,0 +1,170 @@
+<ng-container *ngIf="loading; else elseLoading">
+    <div class="loading">
+        <mat-spinner aria-live="polite" role="status"></mat-spinner>
+    </div>
+</ng-container>
+<ng-template #elseLoading>
+    <div (mouseover)="resetToggleInfo()" id="attachDiv">
+        <div *ngIf="attachmentsClone.length > 0 && isModal" class="attachmentsSubDiv">
+            <div class="attachFilter">
+                <div class="attachFilter-title" style="margin: 13px;">
+                    {{ 'lang.filterAttach' | translate }}
+                </div>
+                <mat-button-toggle-group (change)="setTaget($event.value)" [value]="currentIntegrationTarget"
+                                         class="filterTypes"
+                                         id="integrationTarget">
+                    <mat-button-toggle *ngFor="let type of integrationTargets"
+                                       [checked]="currentIntegrationTarget === type.id"
+                                       [title]="type.description"
+                                       [value]="type.id">{{ type.label }}
+                    </mat-button-toggle>
+                </mat-button-toggle-group>
+                <mat-button-toggle-group (change)="filterType($event)" class="filterTypes" id="attachType"
+                                         style="margin-top: 7px;">
+                    <mat-button-toggle *ngIf="filterAttachTypes.length > 0"
+                                       [checked]="currentFilter === ''"
+                                       [title]="'lang.allAttachTypes' | translate"
+                                       [value]="''">{{ 'lang.all' | translate }}
+                    </mat-button-toggle>
+                    <mat-button-toggle *ngFor="let attachType of filterAttachTypes | sortBy : 'label'"
+                                       [checked]="currentFilter === attachType.id"
+                                       [title]="('lang.attachWithType' | translate) +  attachType.label"
+                                       [value]="attachType.id">{{ attachType.label }}
+                    </mat-button-toggle>
+                </mat-button-toggle-group>
+            </div>
+        </div>
+        <mat-button-toggle-group (change)="filterType($event)" *ngIf="attachmentsClone.length > 0 && !isModal"
+                                 class="filterTypes">
+            <mat-button-toggle [checked]="currentFilter === ''" [value]="''">Tous</mat-button-toggle>
+            <mat-button-toggle *ngFor="let attachType of filterAttachTypes | sortBy : 'label'"
+                               [checked]="currentFilter === attachType.id"
+                               [value]="attachType.id">{{ attachType.label }}
+            </mat-button-toggle>
+        </mat-button-toggle-group>
+        <div *ngIf="attachments.length === 0" style="text-align:center;font-size:24px;font-weight:bold;opacity:0.3;">
+            {{ 'lang.noAttachment' | translate }}
+        </div>
+        <mat-card (mouseover)="$event.stopPropagation();toggleInfo(attachment,true)"
+                  *ngFor="let attachment of attachments | filterList:currentFilter:'type'"
+                  [class.signed]="attachment.status === 'SIGN'"
+                  [style.background-image]="'url('+(attachment.thumbnailUrl | secureUrl | async)+')'"
+                  style="padding:0;margin: 30px;min-height: 300px;background-size: cover;overflow: hidden;">
+            <div (click)="showAttachment(attachment)" *ngIf="attachment.hideMainInfo" [@myAnimation] class="layout">
+                <button (click)="$event.stopPropagation();showAttachment(attachment)" color="primary"
+                        mat-raised-button>{{ 'lang.viewResource' | translate }}
+                </button>
+                <button (click)="$event.stopPropagation();deleteAttachment(attachment)"
+                        *ngIf="attachment.type !=='reply_record_management' && attachment.type !=='acknowledgement_record_management' && attachment.status!=='SIGN' && attachment.status!=='FRZ' && attachment.canDelete && (canDelete || canDelete === null)"
+                        color="warn"
+                        mat-raised-button
+                        name="delete">{{ 'lang.deleteResource' | translate }}
+                </button>
+            </div>
+            <div class="pjToolsContent">
+                <span *ngIf="attachment.relation > 1" class="versionButton"
+                      color="primary">{{ 'lang.version' | translate }} <b
+                        color="secondary">{{ attachment.relation }}</b></span>
+                <button #menuTrigger="matMenuTrigger" [matMenuTriggerFor]="menuPjAction" class="actionsButton"
+                        color="primary"
+                        mat-icon-button name="menuPjAction">
+                    <mat-icon aria-hidden="true" fontIcon="fa-ellipsis-v" fontSet="fas"></mat-icon>
+                </button>
+                <mat-menu #menuPjAction="matMenu">
+                    <button
+                            (click)="$event.stopPropagation(); setInSignatureBook(attachment); menuTrigger.closeMenu()"
+                            *ngIf="!hideIntegrationActions"
+                            [disabled]="attachment.status === 'FRZ' || !attachment.canUpdate"
+                            [title]="'lang.putInSignatureBook' | translate"
+                            class="button-item"
+                            mat-menu-item
+                            name="putInSignatureBook">
+                        <mat-checkbox [checked]="attachment.inSignatureBook" color="primary"></mat-checkbox>
+                        {{ 'lang.putInSignatureBook' | translate }}
+                    </button>
+                    <button
+                            (click)="$event.stopPropagation(); setInSendAttachment(attachment); menuTrigger.closeMenu()"
+                            *ngIf="!hideIntegrationActions"
+                            [disabled]="!mailevaEnabled"
+                            [title]="'lang.putInSendAttach' | translate"
+                            class="button-item"
+                            mat-menu-item>
+                        <mat-checkbox [checked]="attachment.inSendAttach" [disabled]="!mailevaEnabled"
+                                      color="primary">
+                        </mat-checkbox>
+                        {{ 'lang.putInSendAttach' | translate }}
+                    </button>
+                    <button (click)="$event.stopPropagation(); downloadProof(attachment)"
+                            *ngIf="!loading && canDownloadProof(attachment)"
+                            [disabled]="downloadingProof"
+                            [title]="'lang.downloadProof' | translate"
+                            mat-menu-item>
+                        <mat-icon aria-hidden="true" class="fas fa-award" color="primary"
+                                  style="font-size: 17px;"></mat-icon>
+                        <span style="white-space: pre-wrap;">{{ 'lang.downloadProof' | translate }}</span>
+                    </button>
+                    <ng-container *ngIf="attachment.status === 'FRZ'">
+                        <mat-divider></mat-divider>
+                        <button (click)="openExternalSignatoryBookWorkflow(attachment)"
+                                [disabled]="!externalSignatoryBook.canViewWorkflow()"
+                                [title]="getTitle()"
+                                mat-menu-item>
+                            {{ 'lang.' + externalSignatoryBook.signatoryBookEnabled + 'Workflow' | translate }}
+                        </button>
+                    </ng-container>
+                </mat-menu>
+            </div>
+
+            <div class="infosPj">
+                <div class="stateInfo">
+                    <i *ngIf="attachment.inSignatureBook" class="fas fa-file-signature"
+                       title="{{'lang.inSignatureBook' | translate}}"></i>&nbsp;
+                    <i *ngIf="attachment.inSendAttach" class="fa fa-shipping-fast"
+                       title="{{'lang.inShipping' | translate}}"></i>
+                    <span *ngIf="attachment.inSignatureBook"
+                          [title]="(attachment.signable ? 'lang.signTargetDesc' : 'lang.annexTargetDesc') | translate"
+                          class="integrationTarget"
+                          name="integrationTarget">
+                        {{ (attachment.signable ? 'lang.signTarget' : 'lang.annexTarget') | translate }}
+                    </span>
+                </div>
+                <div *ngIf="!attachment.hideMainInfo" class="mainInfos">
+                    {{ attachment.chrono }}&nbsp;
+                </div>
+                <div *ngIf="attachment.hideMainInfo" class="mainInfos">
+                    {{ attachment.title | shorten : 40:'...' }}
+                </div>
+                <div *ngIf="!attachment.hideMainInfo" class="subInfos">
+                    {{ attachment.typeLabel }}
+                </div>
+                <div *ngIf="attachment.hideMainInfo" class="subInfos">
+                    <ng-container *ngIf="attachment.signDate !== undefined; else elseTemplate">
+                        {{ 'lang.signedAlt' | translate }}
+                        <b>{{ attachment.signDate | timeAgo : 'full' }}</b> {{ 'lang.by' | translate | lowercase }}
+                        <b>{{ attachment.signatory }}</b>
+                    </ng-container>
+                    <ng-template #elseTemplate>
+                        <ng-container *ngIf="attachment.modificationDate !== null; else creationTemplate">
+                            {{ 'lang.modified' | translate }}
+                            <b>{{ attachment.modificationDate | timeAgo : 'full' }}</b>
+                            {{ 'lang.by' | translate | lowercase }} <b>{{ attachment.modifiedBy }}</b>
+                        </ng-container>
+                        <ng-template #creationTemplate>
+                            {{ 'lang.created' | translate }} <b>{{ attachment.creationDate | timeAgo : 'full' }}</b>
+                            {{ 'lang.by' | translate | lowercase }} <b>{{ attachment.typistLabel }}</b>
+                        </ng-template>
+                    </ng-template>
+                </div>
+                <div class="statusInfo">
+                    {{ 'lang.attachment_' + attachment.status | translate }}
+                </div>
+            </div>
+        </mat-card>
+    </div>
+    <button (click)="createAttachment()" *ngIf="canAdd" [class.addPjPanel]="target === 'panel'"
+            [class.addPjProcess]="target === 'process'"
+            [title]="'lang.addAttachment' | translate" class="addPj" color="primary"
+            mat-fab>
+        <mat-icon aria-hidden="true" class="fa fa-plus"></mat-icon>
+    </button>
+</ng-template>

@@ -1,0 +1,174 @@
+<mat-sidenav-container
+        [attr.aria-label]="'lang.indexation' | translate"
+        class="maarch-container"
+        role="application">
+    <ng-template
+        #adminMenuTemplate
+        aria-labelledby="admin-menu-title"
+        id="admin-menu"
+        role="complementary">
+        <app-select-indexing-model
+            #appSelectIndexingModel
+            (afterListModelsLoaded)="loadIndexingModel($event)"
+            (afterSelectedListModel)="this.currentIndexingModel = $event.indexingModel; indexingForm.loadForm($event.indexingModel.id)"
+            [adminMode]="true"
+            [attr.aria-label]="'lang.indexingModel' | translate"
+            [indexingForm]="indexingForm"
+            role="group">
+        </app-select-indexing-model>
+        <ng-container *ngIf="!isEmptyIndexingModels()">
+            <div class="indexing-form-container">
+                <app-indexing-form
+                    #indexingForm
+                    (loadingFormEndEvent)="setLoadedForm()"
+                    (resourceToLinkEvent)="resourceToLink = $event"
+                    (retrieveDocumentEvent)="appDocumentViewer.saveDocService()"
+                    *ngIf="currentIndexingModel.id !== undefined"
+                    [attr.aria-describedby]="'form-help-' + currentIndexingModel.id"
+                    [attr.aria-label]="'lang.indexingForm' | translate"
+                    [groupId]="currentGroupId"
+                    [indexingFormId]="currentIndexingModel.id"
+                    role="form"
+                ></app-indexing-form>
+            </div>
+            <div aria-labelledby="actions-section-title"
+                 class="actions-indexing-form"
+                 role="contentinfo">
+                <ng-container
+                        *ngIf="actionsListLoaded && hasActions() && indexingForm !== undefined && selectedAction !== undefined">
+                    <button
+                            [attr.aria-expanded]="false"
+                            [attr.aria-haspopup]="'menu'"
+                            [attr.aria-label]="selectedAction.label"
+                            [disabled]="selectedAction.id === 0"
+                            [matMenuTriggerFor]="menu"
+                            [title]="selectedAction.label"
+                            class="button-form-primary" mat-button
+                            style="width:350px;margin-right:20px;">
+                        <span [innerHTML]="selectedAction.label" aria-hidden="true" class="menu-label">
+                        </span>
+                        <mat-icon aria-hidden="true" class="fa fa-chevron-down menu-icon"></mat-icon>
+                    </button>
+                    <mat-menu #menu="matMenu"
+                              [attr.aria-label]="'lang.actions' | translate"
+                              [class]="'menuForm menuAction'"
+                              role="menu">
+                        <div class="menuTitle" role="presentation">
+                            <span>
+                                {{ 'lang.actions' | translate }}
+                            </span>
+                            <mat-form-field (click)="$event.stopPropagation();" appearance="outline" class="smallInput"
+                                            floatLabel="never">
+                                <input #listFilter
+                                       (click)="$event.stopPropagation();"
+                                       (keydown)="$event.stopPropagation()"
+                                       [attr.aria-label]="'lang.filterActions' | translate"
+                                       [placeholder]="'lang.filterBy' | translate"
+                                       autocomplete="off"
+                                       id="searchTerm" matInput
+                                       role="searchbox">
+                            </mat-form-field>
+                        </div>
+                        <ng-container *ngFor="let action of actionsList | filterList:listFilter.value:'label'">
+                            <button (click)="selectAction(action)"
+                                    *ngIf="showActionInCurrentCategory(action)"
+                                    [attr.aria-label]="action.label"
+                                    [class.listModels-menu-selected]="action.id === selectedAction.id"
+                                    [disabled]="!action.enabled"
+                                    [title]="action.label"
+                                    mat-menu-item
+                                    role="menuitem">
+                                <span [title]="action.label"
+                                      style="flex:1;">{{ action.label }}</span><small *ngIf="!action.enabled"
+                                    [attr.aria-label]="'lang.badActionParam' | translate"
+                                    [title]="'lang.badActionParam' | translate" color="warn"
+                                    style="position: absolute;top: 15px;left: 140px;">{{ 'lang.badActionParam' | translate }}</small>
+                            </button>
+                        </ng-container>
+                    </mat-menu>
+                    <button
+                            (click)="onSubmit()"
+                            *ngIf="!appService.getViewMode()"
+                            [attr.aria-label]="'lang.validate' | translate"
+                            [disabled]="actionService.loading || selectedAction.id === 0 || (appDocumentViewer !== undefined && !appDocumentViewer.isEditorLoaded())"
+                            [title]="'lang.validate' | translate"
+                            class="button-form-primary-filled"
+                            mat-button
+                            style="width: 150px;align-items: center;justify-content: center;text-align: center;display: flex;">{{ 'lang.validate' | translate }}
+                    </button>
+                    <button (click)="onSubmit()" *ngIf="appService.getViewMode()" class="button-form-primary"
+                            mat-icon-button>
+                        <mat-icon aria-hidden="true" class="fa fa-check"></mat-icon>
+                    </button>
+                </ng-container>
+                <div *ngIf="actionsListLoaded && !hasActions()"
+                     [attr.aria-label]="'lang.noAvailableAction' | translate"
+                     [innerHTML]="'lang.noAvailableAction' | translate"
+                     [title]="'lang.noAvailableAction' | translate"
+                     class="emptyAction"></div>
+            </div>
+        </ng-container>
+        <div *ngIf="isEmptyIndexingModels()"
+             [attr.aria-label]="'lang.noAvailableIndexingModel' | translate"
+             [innerHTML]="'lang.noAvailableIndexingModel' | translate"
+             [title]="'lang.noAvailableIndexingModel' | translate"
+             class="emptyModel"></div>
+    </ng-template>
+    <mat-sidenav-content>
+        <div class="bg-head">
+            <div [class.customContainerRight]="appService.getViewMode()" class="bg-head-title">
+                <div class="bg-head-title-label">
+                    <app-header-left></app-header-left>
+                </div>
+                <div class="bg-head-title-tool">
+                    <app-header-right></app-header-right>
+                </div>
+            </div>
+        </div>
+        <div [class.fullContainer]="appService.getViewMode()" class="bg-head-content">
+            <button (click)="snav2.toggle(); attachmentsListPanelOpened = !attachmentsListPanelOpened;"
+                    [attr.aria-label]="'lang.attachments' | translate"
+                    [title]="'lang.attachments' | translate"
+                    class="attach-button"
+                    mat-button>
+                <mat-icon aria-hidden="true" class="fa fa-paperclip"></mat-icon>
+                {{ 'lang.attachments' | translate }} <span
+                    [attr.aria-label]="appIndexationAttachmentsList.getCountAttachments()"
+                    [class.count-badge-empty]="appIndexationAttachmentsList.getCountAttachments() === 0"
+                    aria-hidden="true"
+                    class="count-badge">{{ appIndexationAttachmentsList.getCountAttachments() }}</span>
+            </button>
+        </div>
+        <div [class.fullContainer]="appService.getViewMode()" class="document-container">
+            <div class="content">
+                <app-document-viewer
+                    #appDocumentViewer
+                    (triggerEvent)="refreshDatas($event)"
+                    (triggerFullScreen)="attachmentsListPanelOpened ? snav2?.toggle() : snav2?.close()"
+                    [attr.aria-label]="'lang.documentEditor' | translate"
+                    [editMode]="true"
+                    [style.display]="this.currentIndexingModel.category !== 'registeredMail' ? 'block' : 'none'"
+                    [tmpFilename]="tmpFilename"
+                    role="application"
+                    style="height:100%;width:100%;">
+                </app-document-viewer>
+                <div *ngIf="this.currentIndexingModel.category === 'registeredMail'"
+                     style="font-size: 120px;opacity: 0.4;">
+                    <mat-icon aria-hidden="true" class="fas fa-dolly-flatbed"></mat-icon>
+                </div>
+            </div>
+        </div>
+    </mat-sidenav-content>
+    <mat-sidenav #snav2 [attr.aria-expanded]="attachmentsListPanelOpened"
+                 [attr.aria-hidden]="!attachmentsListPanelOpened"
+                 [attr.aria-label]="'Panneau des pièces jointes'" [class.docView]="!filtersListService.filterMode"
+                 [fixedInViewport]="appService.getViewMode()" [mode]="appService.getViewMode() ? 'over' : 'side'"
+                 [opened]="false"
+                 autoFocus="false"
+                 class="panel-right"
+                 position='end'
+                 role="complementary"
+                 style="overflow-x:hidden;width:300px;">
+        <app-indexation-attachments-list #appIndexationAttachmentsList role="list"></app-indexation-attachments-list>
+    </mat-sidenav>
+</mat-sidenav-container>

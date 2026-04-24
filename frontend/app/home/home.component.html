@@ -1,0 +1,22 @@
+<mat-sidenav-container autosize class="maarch-container" joyrideStep="welcome" stepPosition="center">
+    <mat-sidenav-content>
+        <div class="bg-head">
+            <div class="bg-head-title" [class.customContainerRight]="appService.getViewMode()">
+                <div class="bg-head-title-label">
+                    <app-header-left></app-header-left>
+                </div>
+                <div class="bg-head-title-tool">
+                    <app-header-right></app-header-right>
+                </div>
+            </div>
+            <div class="bg-head-content" [class.fullContainer]="appService.getViewMode()">
+                <app-welcome-message></app-welcome-message>
+            </div>
+        </div>
+        <div class="container" [class.fullContainer]="appService.getViewMode()">
+            <div class="container-content">
+                <app-dashboard></app-dashboard>
+            </div>
+        </div>
+    </mat-sidenav-content>
+</mat-sidenav-container>

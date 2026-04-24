@@ -1,0 +1,83 @@
+<ng-container #myPlugin></ng-container>
+<div class="login-container">
+    <ng-container *ngIf="loading || loadingAuthWithProConnect">
+        <div class="loading">
+            <mat-spinner></mat-spinner>
+            <span *ngIf="loadingAuthWithProConnect">{{ getLoadingMessage() }}</span>
+        </div>
+    </ng-container>
+    <div class="login-content" [class.showForm]="showForm"
+         [style.background-image]="'url(../rest/images?image=loginPage)'">
+        <div class="login-form">
+            <mat-icon svgIcon="maarchLogoFull" class="maarchLogo"></mat-icon>
+            <div style="color: white;font-size: 14px;" [innerHTML]="authService.loginMessage | safeHtml"></div>
+            <p style="color: white;font-size: 14px;font-weight: bold;">{{ authService.applicationName }}</p>
+            <form (ngSubmit)="onSubmit()" [formGroup]="loginForm">
+                <div style="padding-left: 30px;padding-right: 30px;">
+                    <mat-form-field *ngIf="isStandardAuthMode()" class="input-row login" appearance="outline"
+                                    style="padding-bottom: 0;">
+                        <input #login autofocus id="login" name="login" matInput [placeholder]="'lang.id' | translate"
+                               formControlName="login"
+                               type="text">
+                    </mat-form-field>
+                    <mat-form-field *ngIf="isStandardAuthMode()" class="input-row" appearance="outline">
+                        <input id="password" name="password" matInput [placeholder]="'lang.password' | translate"
+                               [type]="hidePassword ? 'password' : 'text'"
+                               formControlName="password" autocomplete="off">
+                        <button type="button" color="primary" matSuffix mat-icon-button
+                                style="cursor: pointer; margin-right: 2px;"
+                                (click)="$event.stopPropagation(); hidePassword = !hidePassword;"
+                                [title]="(hidePassword ? 'lang.showPassword' : 'lang.hidePassword') | translate">
+                            <mat-icon color="primary" class="fa fa-2x"
+                                      [ngClass]="[hidePassword ? 'fa-eye-slash' : 'fa-eye']">
+                            </mat-icon>
+                        </button>
+                        <mat-hint align="end" *ngIf="authService.authMode === 'standard'"><a
+                                style="cursor: pointer;" (click)="goTo('/forgot-password')"
+                                class="infoLogin">{{ 'lang.forgotPassword' | translate }} ?</a></mat-hint>
+                        <mat-hint align="end" *ngIf="authService.authMode === 'ldap'"><span
+                                class="infoLogin">{{ 'lang.' + authService.authMode + 'Enabled' | translate }}</span>
+                        </mat-hint>
+                    </mat-form-field>
+                </div>
+                <div *ngIf="['cas', 'keycloak', 'sso', 'azure_saml'].indexOf(authService.authMode) > -1"
+                     class="alert-message alert-message-info" role="alert" style="max-width: 100%;">
+                    {{ 'lang.' + authService.authMode + 'Enabled' | translate }}
+                </div>
+                <div [class.login-btns]="isProConnectEnabled()">
+                    <button id="submit" type="submit" mat-stroked-button [class.standard-login]="isProConnectEnabled()"
+                            [disabled]="loginForm.invalid || loading"
+                            [title]="'lang.LOGIN' | translate"
+                            style="color: white;border-color: #24b0ed;background: #24b0ed;">
+                        {{ 'lang.LOGIN' | translate }}
+                    </button>
+                    <div>
+                        <button *ngIf="isProConnectEnabled()"
+                                class="proconnect-button"
+                                type="button"
+                                [title]="'lang.loginWithProConnect' | translate"
+                                [disabled]="loading"
+                                (click)="$event.stopPropagation(); authWithProConnect()">
+                            <span class="proconnect-sr-only">{{ 'lang.loginWithProConnect' | translate }}}</span>
+                        </button>
+                        <p *ngIf="isProConnectEnabled()" class="proconnect-description">
+                            <a href="https://www.proconnect.gouv.fr/"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               [title]="'lang.proConnectDescription' | translate"
+                            >
+                                {{ 'lang.whatIsProConnect' | translate }}
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <footer style="padding: 8px; backdrop-filter: blur(8px)">
+            <p style="color: white;cursor: default"
+               [title]="'lang.applicationVersion' | translate : {version: environment?.BASE_VERSION, author: environment?.AUTHOR}"
+               [innerHTML]="'lang.applicationVersion' | translate : {version: environment?.BASE_VERSION, author: environment?.AUTHOR}">
+            </p>
+        </footer>
+    </div>
+</div>

@@ -1,0 +1,55 @@
+<div (fileDropped)="dndUploadFile($event)" appUploadFileDragDrop
+     style="height: 100%;display: flex;flex-direction: column;">
+    <div [title]="'lang.attachments' | translate" class="attachments-label">
+        <span>{{ 'lang.attachments' | translate }}</span>
+    </div>
+    <ng-container *ngIf="attachments.length > 0; else elseTemplate">
+        <div class="btn-actions" role="region">
+            <button (click)="docToUpload.click()" [title]="'lang.add' | translate" color="primary"
+                    mat-raised-button style="flex: 1;border-radius: 20px;">
+                {{ 'lang.add' | translate }}
+            </button>
+            <button (click)="deleteAttachment()" [disabled]="attachments.length === 0"
+                    [title]="'lang.deleteAll' | translate"
+                    color="warn" mat-icon-button style="font-size: 20px;">
+                <mat-icon aria-hidden="true" class="fas fa-trash-alt">
+                </mat-icon>
+            </button>
+        </div>
+        <div *ngFor="let attachment of attachments;let i=index" class="attachment-content">
+            <mat-icon
+                    (click)="deleteAttachment(i)" [title]="'lang.delete' | translate"
+                    aria-hidden="true"
+                    class="fa fa-times-circle close-button"
+                    color="warn"
+                    matRipple>
+            </mat-icon>
+            <div [title]="attachment.file.name" class="attachment-name">
+                <mat-icon aria-hidden="true" class="fa fa-paperclip"></mat-icon>
+                {{ attachment.file.name }}
+            </div>
+            <app-plugin-select-search
+                    [class]="''"
+                    [datas]="attachmentsTypes"
+                    [formControlSelect]="attachment['type']"
+                    [label]="'lang.type' | translate"
+                    appearance="outline"
+                    required="true"
+                    showLabel="true"
+                    style="width:100%;">
+            </app-plugin-select-search>
+            <mat-form-field appearance="outline">
+                <mat-label [title]="'lang.subject' | translate">{{ 'lang.subject' | translate }} *</mat-label>
+                <input [formControl]="attachment['subject']" matInput maxlength="255">
+            </mat-form-field>
+        </div>
+    </ng-container>
+    <ng-template #elseTemplate>
+        <div (click)="docToUpload.click()" [title]="'lang.add' | translate" class="add-area">
+            <mat-icon aria-hidden="true" class="fa fa-plus" color="primary"
+                      style="font-size: 60px;height: auto;width: auto;">
+            </mat-icon>
+        </div>
+    </ng-template>
+    <input #docToUpload (change)="uploadTrigger($event)" multiple name="files[]" style="display:none;" type="file">
+</div>

@@ -1,0 +1,15 @@
+<mat-form-field class="pageList" role="listitem">
+    <input
+            (change)="goToPage($event.target.value)"
+            (keypress)="functions.isNumber($event)"
+            [formControl]="currentPage"
+            [max]="pageLength"
+            [title]="('lang.page' | translate) + ' ' + currentPage.value + '/' + pageLength"
+            class="text-right"
+            matInput
+            min="1"
+            type="number">
+    <mat-hint *ngIf="!hasError" align="start">{{ 'lang.page' | translate }}</mat-hint>
+    <mat-hint *ngIf="!hasError" align="end">{{ currentPage.value }} / {{ pageLength }}</mat-hint>
+    <mat-error *ngIf="hasError" align="start">{{ 'lang.pageNotFound' | translate }}</mat-error>
+</mat-form-field>

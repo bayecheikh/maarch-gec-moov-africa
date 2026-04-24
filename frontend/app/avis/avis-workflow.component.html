@@ -1,0 +1,164 @@
+<mat-list *ngIf="!loading">
+    <form class="form-horizontal" role="form">
+        <div class="form-group">
+            <div [ngClass]="[avisWorkflow.items.length > 0 && showListModels ? 'col-md-11' : 'col-md-12']">
+                <mat-form-field *ngIf="adminMode" appearance="outline">
+                    <input #searchAvisUserInput [formControl]="searchAvisUser" [matAutocomplete]="autoGroup"
+                           id="searchAvisUserInput"
+                           matInput
+                           placeholder="Ajouter des personnes" type="text">
+                    <mat-autocomplete #autoGroup="matAutocomplete"
+                                      (opened)="initFilterAvisModelList()"
+                                      (optionSelected)="addItemToWorkflow($event.option.value)">
+                        <mat-option *ngIf="avisModelListNotLoaded" disabled>
+                            <div style="display: flex;justify-content: center;">
+                                <mat-spinner aria-live="polite" diameter="35" role="status"></mat-spinner>
+                            </div>
+                        </mat-option>
+                        <mat-optgroup *ngIf="(filteredPublicModels | async)?.length > 0"
+                                      [label]="'lang.publicModel' | translate"
+                                      class="avisSignList">
+                            <mat-option *ngFor="let model of filteredPublicModels | async | sortBy : 'label'"
+                                        [value]="model">
+                                {{ model.label }}
+                            </mat-option>
+                        </mat-optgroup>
+                        <mat-optgroup *ngIf="(filteredPrivateModels | async)?.length > 0"
+                                      [label]="'lang.privateModel' | translate"
+                                      class="avisSignList">
+                            <mat-option *ngFor="let model of filteredPrivateModels | async | sortBy : 'label'"
+                                        [value]="model">
+                                <div style="display: flex;align-items: center;">
+                                    <div style="flex:1">
+                                        {{ model.label }}
+                                    </div>
+                                    <button (click)="$event.stopPropagation();deletePrivateModel(model)" color="warn"
+                                            mat-icon-button>
+                                        <mat-icon aria-hidden="true" class="fa fa-trash"
+                                                  style="margin: 0;"></mat-icon>
+                                    </button>
+                                </div>
+                            </mat-option>
+                        </mat-optgroup>
+                        <mat-optgroup *ngIf="(filteredSignAvisUsers | async)?.length > 0"
+                                      [label]="'lang.user' | translate | titlecase"
+                                      class="avisSignList">
+                            <mat-option *ngFor="let user of filteredSignAvisUsers | async | sortBy : 'label'"
+                                        [value]="user">
+                                {{ user.label }} <small *ngIf="!functions.empty(user.entity)">({{ user.entity }}
+                                )</small>
+                            </mat-option>
+                        </mat-optgroup>
+                    </mat-autocomplete>
+                </mat-form-field>
+            </div>
+            <div *ngIf="avisWorkflow.items.length > 0 && showListModels && adminMode" class="col-md-1">
+                <button (click)="$event.stopPropagation();openPromptSaveModel()" color="primary" mat-icon-button
+                        style="margin-left: -22px"
+                        title="{{'lang.saveAsPrivateModel' | translate}}">
+                    <mat-icon aria-hidden="true" class="fa fa-copy" style="font-size: 20px;"></mat-icon>
+                </button>
+            </div>
+        </div>
+    </form>
+    <div #dataAvailableList="cdkDropList" (cdkDropListDropped)="drop($event)" [cdkDropListData]="avisWorkflow.items"
+         [cdkDropListDisabled]="!adminMode"
+         cdkDropList class="cdk-list">
+        <div *ngIf="adminMode && avisWorkflow.items.length === 0" class="emptyContent">
+            {{ 'lang.noCircuitAvailable' | translate }}
+        </div>
+        <div *ngIf="!adminMode && avisWorkflow.items.length === 0" class="emptyContent">
+            {{ 'lang.cannotAddAvisCircuit' | translate }}
+        </div>
+        <mat-list-item *ngFor="let diffusion of avisWorkflow.items;let i=index"
+                       [cdkDragDisabled]="!adminMode || !functions.empty(diffusion.process_date)"
+                       [class.notDraggable]="!adminMode || !functions.empty(diffusion.process_date)"
+                       [class.notEditable]="!adminMode"
+                       [class.processed]="!functions.empty(diffusion.process_date)"
+                       cdkDrag
+                       class="columns workflow" disableRipple>
+            <mat-icon *ngIf="getCurrentAvisUserIndex() === i && !adminMode" aria-hidden="true"
+                      class="fa fa-chevron-right fa-2x"
+                      color="accent" mat-list-icon>
+            </mat-icon>
+            <mat-icon
+                    [class.invalid]="!diffusion.hasPrivilege || !diffusion.isValid"
+                    [ngClass]="{'fa fa-user fa-2x': functions.empty(diffusion.picture),'avatar': !functions.empty(diffusion.picture)}"
+                    [style.background-image]="!functions.empty(diffusion.picture) ? 'url('+diffusion.picture+')' : ''"
+                    color="primary"
+                    mat-list-icon>
+            </mat-icon>
+            <ng-container *ngIf="!adminMode || !functions.empty(diffusion.process_date)">
+                <mat-icon [class.fa-hourglass]="diffusion.process_date === null"
+                          [class.fa-thumbs-up]="!functions.empty(diffusion.process_date)"
+                          [class.valid]="!functions.empty(diffusion.process_date)"
+                          aria-hidden="true"
+                          class="fa-2x far"
+                          mat-list-icon
+                          style="opacity:0.5;"></mat-icon>
+            </ng-container>
+            <div class="workflowLine" mat-line>
+                <div class="workflowLineContainer">
+                    <div [class.unauthorized]="!diffusion.hasPrivilege || !diffusion.isValid"
+                         [title]="diffusion.labelToDisplay"
+                         class="workflowLineLabel">
+                        <ng-container *ngIf="diffusion?.status === 'ABS'">
+                            <mat-icon
+                                    [title]="'lang.absUser' | translate"
+                                    class="fas fa-circle"
+                                    color="warn"
+                                    mat-list-icon
+                                    style="font-size: 10px; margin-right: -15px; cursor: help">
+                            </mat-icon> &nbsp;
+                        </ng-container>
+                        {{ diffusion.labelToDisplay }}
+                        <ng-container
+                                *ngIf="!functions.empty(diffusion.process_date) && diffusion.delegatedBy !== null">
+                            <mat-icon [title]="('lang.insteadOf' | translate) + ' ' + diffusion.delegatedBy"
+                                      aria-hidden="true" class="fas fa-exclamation-circle"
+                                      mat-list-icon
+                                      style="opacity:0.5;font-size: 125%;height: 15px;color: red"></mat-icon>
+                        </ng-container>
+                    </div>
+                    <div [class.unauthorized]="!diffusion.hasPrivilege || !diffusion.isValid"
+                         class="workflowLineSubLabel">
+                        {{ diffusion.item_entity }}
+                    </div>
+                    <div *ngIf="!functions.empty(diffusion.process_date)" [title]="diffusion.process_date | fullDate"
+                         class="workflowLineProcessDate"
+                         color="accent">{{ 'lang.avisSent' | translate }} {{
+                            diffusion.process_date
+                                | timeAgo : 'full'
+                        }}
+                    </div>
+                </div>
+                <div *ngIf="mode === 'parallel'">
+                    <button [disabled]="!adminMode || !functions.empty(diffusion.process_date)"
+                            [matMenuTriggerFor]="menu"
+                            [title]="getRoleLabel(diffusion.item_mode)" class="currentRoleButton"
+                            color="primary"
+                            mat-raised-button>{{ getRoleLabel(diffusion.item_mode) }}
+                    </button>
+                    <mat-menu #menu="matMenu">
+                        <button (click)="changeRole(role, i)" *ngFor="let role of availableRoles" [title]="role.label"
+                                mat-menu-item>{{ role.label }}
+                        </button>
+                    </mat-menu>
+                </div>
+                <div *ngIf="!diffusion.hasPrivilege" [title]="'lang.noPrivileges' | translate" class="invalid">
+                    {{ 'lang.noPrivileges' | translate }}
+                </div>
+                <div *ngIf="!diffusion.isValid" [title]="'lang.userNotValid' | translate" class="invalid">
+                    {{ 'lang.userNotValid' | translate }}
+                </div>
+            </div>
+            <button (click)="deleteItem(i)" *ngIf="adminMode && functions.empty(diffusion.process_date)"
+                    mat-icon-button>
+                <mat-icon aria-hidden="true" class="fa fa-times" color="warn"></mat-icon>
+            </button>
+        </mat-list-item>
+    </div>
+</mat-list>
+<div *ngIf="loading" style="display:flex;padding: 10px;">
+    <mat-spinner style="margin:auto;"></mat-spinner>
+</div>

@@ -1,0 +1,67 @@
+<div class="signatorybook-header">
+    <div class="signatorybook-header-left">
+        <div [attr.aria-label]="'lang.toggleResListDrawer' | translate"
+             [title]="'lang.toggleResListDrawer' | translate"
+             class="signatorybook-header-left-stream">
+            <button
+                    (click)="toggleResListDrawer.emit()"
+                    [attr.aria-label]="'lang.toggleResListDrawer' | translate"
+                    [title]="'lang.toggleResListDrawer' | translate"
+                    mat-icon-button>
+                <mat-icon aria-hidden="true" class="fa fa-stream material-icons"></mat-icon>
+            </button>
+        </div>
+        <div [attr.aria-label]="signatureBookService.basketLabel"
+             [title]="signatureBookService.basketLabel"
+             class="signatorybook-header-left-label">
+            <button (click)="goToHome()"
+                    [attr.aria-label]="'lang.home' | translate"
+                    [title]="'lang.home' | translate"
+                    class="maarch-logo"
+                    mat-button>
+                <mat-icon aria-hidden="true" class="maarchLogo" svgIcon="maarchLogoFull"></mat-icon>
+            </button>
+            <span [title]="signatureBookService.basketLabel"
+                  class="basket-label">{{ signatureBookService.basketLabel }}</span>
+        </div>
+    </div>
+    <div class="signatorybook-header-right">
+        <div class="prev-next-container">
+            <button
+                    (click)="$event.stopPropagation(); goToResource('previous')"
+                    [disabled]="!canGoToPrevious"
+                    [title]="'lang.prevParaph' | translate"
+                    class="prev-button"
+                    mat-button>
+                <mat-icon aria-hidden="true" class="fa fa-angle-left" style="height: auto"></mat-icon>
+                <span style="margin-left: 18px;">{{ 'lang.prevParaph' | translate }}</span>
+            </button>
+            <div class="mark-as-target-action-mass">
+                <mat-checkbox
+                        (change)="toggleCurrentResource($event.checked)"
+                        [attr.aria-label]="'lang.markAsTargetActionMass' | translate"
+                        [checked]="signatureBookService.isSelectedResource(resId)"
+                        [matBadgeHidden]="signatureBookService.selectedMailsCount <= 0"
+                        [matBadge]="signatureBookService.selectedMailsCount"
+                        [title]="'lang.markAsTargetActionMass' | translate"
+                        class="checkbox-mass-sign">
+                </mat-checkbox>
+            </div>
+            <button (click)="$event.stopPropagation(); goToResource('next')" [disabled]="!canGoToNext"
+                    [title]="'lang.nextParaph' | translate"
+                    class="next-button"
+                    mat-button>
+                <span style="margin-right: 18px;">{{ 'lang.nextParaph' | translate }}</span>
+                <mat-icon aria-hidden="true" class="fa fa-angle-right" style="height: auto;"></mat-icon>
+            </button>
+        </div>
+        <button (click)="backToBasket()"
+                [attr.aria-label]="'lang.backBasket' | translate"
+                [title]="'lang.backBasket' | translate"
+                mat-icon-button>
+            <mat-icon aria-hidden="true" class="fa-regular fa-circle-xmark" color="primary"
+                      style="color:white;font-size: 30px">
+            </mat-icon>
+        </button>
+    </div>
+</div>

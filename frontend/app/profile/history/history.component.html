@@ -1,0 +1,59 @@
+<div class="row">
+    <div class="col-md-6 col-xs-6">
+        <mat-form-field>
+            <input matInput (keyup)="applyFilter($event.target.value)"
+                placeholder="{{'lang.filterBy' | translate}}">
+        </mat-form-field>
+    </div>
+    <div class="col-md-6 col-xs-6">
+        <mat-paginator #paginatorHistory [length]="100" [hidePageSize]="true" [pageSize]="10" *ngIf="!adminMode"></mat-paginator>
+
+        <div class="table-head table-head-tool" *ngIf="adminMode">
+            <span style="position: relative;">
+                <mat-paginator #paginatorHistory [length]="100" [pageSize]="10" [pageSizeOptions]="[10, 25, 50, 100, 150]"></mat-paginator>
+                <app-select-page [paginator]="paginatorHistory"></app-select-page>
+            </span>
+        </div>
+    </div>
+</div>
+<mat-table #tableHistorySort="matSort" [dataSource]="dataSource" matSort
+    matSortActive="event_date" matSortDirection="desc">
+        <ng-container matColumnDef="event_date">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>{{'lang.date' | translate}}</mat-header-cell>
+            <mat-cell *matCellDef="let element">
+                {{element.event_date | date : "dd/MM/y HH:mm"}}
+            </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="record_id">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>{{'lang.technicalId' | translate}}</mat-header-cell>
+            <mat-cell *matCellDef="let element">{{element.record_id}}</mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="info">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>
+                {{'lang.description' | translate}}
+            </mat-header-cell>
+            <mat-cell *matCellDef="let element"> {{element.info}} </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="remote_ip">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>
+                {{'lang.ip' | translate}}
+            </mat-header-cell>
+            <mat-cell *matCellDef="let element"> {{element.remote_ip}} </mat-cell>
+        </ng-container>
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+</mat-table>
+<div class="row" *ngIf="adminMode">
+    <div class="col-md-3 pull-right" style="padding-top:10px;">
+        <mat-form-field>
+            <input matInput
+                [(ngModel)]="minDate"
+                [matDatepicker]="picker"
+                [max]="maxDate"
+                [placeholder]="'lang.since' | translate"
+                (dateChange)="filterStartDate()">
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker startView="month" [startAt]="minDate"></mat-datepicker>
+        </mat-form-field>
+    </div>
+</div>

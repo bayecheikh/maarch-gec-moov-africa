@@ -1,0 +1,59 @@
+<div *ngIf="documentData"
+     [attr.aria-labelledby]="'banner-title-' + documentData.resId"
+     [class.banner-closed]="!bannerOpened"
+     [class.banner-opened]="bannerOpened"
+     class="resource-info"
+     role="region">
+    <div [attr.aria-label]="title"
+         [title]="title"
+         class="title">
+        <button
+                (click)="changeBlockState(!bannerOpened);$event.stopPropagation()"
+                *ngIf="documentData.fileInformation !== null"
+                [attr.aria-expanded]="bannerOpened"
+                [attr.aria-label]="(!bannerOpened ? 'lang.showInformationsBlock' : 'lang.hideInformationsBlock') | translate"
+                [title]="(!bannerOpened ? 'lang.showInformationsBlock' : 'lang.hideInformationsBlock') | translate"
+                class="mat-icon-square"
+                mat-icon-button>
+            <mat-icon [class.fa-minus-square]="bannerOpened" [class.fa-plus-square]="!bannerOpened"
+                      aria-hidden="true"
+                      class="far">
+            </mat-icon>
+        </button>
+        <span [title]="title" class="subject">{{ label }}</span>
+        <small [title]="documentData?.typeLabel" class="subSubject">{{ documentData?.typeLabel }}</small>
+        <div *ngIf="bannerOpened" class="title-divider"></div>
+    </div>
+    <div *ngIf="documentData.fileInformation !== null" class="content">
+        <div [attr.aria-label]="('lang.createdBy' | translate) + ' : ' + documentData.fileInformation.typistLabel"
+             [title]="('lang.createdBy' | translate) + ' : ' + documentData.fileInformation.typistLabel"
+             class="content-item">
+            <div>{{ 'lang.createdBy' | translate }}</div>
+            <div class="content-item-value">{{ documentData.fileInformation.typistLabel }}</div>
+        </div>
+
+        <div [attr.aria-label]="('lang.creationDate' | translate) + ' : ' + (documentData.fileInformation.creationDate | fullDate)"
+             [title]="('lang.creationDate' | translate) + ' : ' + (documentData.fileInformation.creationDate | fullDate)"
+             class="content-item">
+            <div>{{ 'lang.creationDate' | translate }}</div>
+            <div class="content-item-value"
+                 style="width: 220px;">{{ documentData.fileInformation.creationDate | fullDate }}
+            </div>
+        </div>
+
+        <div [attr.aria-label]="('lang.version' | translate) + ' : ' + documentData.fileInformation.version"
+             [title]="('lang.version' | translate) + ' : ' + documentData.fileInformation.version"
+             class="content-item">
+            <div>{{ 'lang.version' | translate }}</div>
+            <div class="content-item-value">{{ documentData.fileInformation.version }}</div>
+        </div>
+
+        <div [attr.aria-label]="('lang.format' | translate) + ' : ' + documentData.fileInformation.format"
+             [title]="('lang.format' | translate) + ' : ' + documentData.fileInformation.format"
+             class="content-item"
+             style="margin-right: -70px;">
+            <div class="format">{{ 'lang.format' | translate }}</div>
+            <div class="content-item-value">{{ documentData.fileInformation.format }}</div>
+        </div>
+    </div>
+</div>

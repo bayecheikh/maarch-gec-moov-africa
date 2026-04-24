@@ -1,0 +1,90 @@
+<div class="listModels">
+    <div *ngIf="!adminMode; else menuModel" class="primary">
+        {{ 'lang.chosenModel' | translate }}
+        : {{ currentIndexingModel.label }} {{ currentIndexingModel.default ? '(' + this.translate.instant('lang.default') + ')' : '' }}
+    </div>
+    <ng-template #menuModel>
+        <button
+                [attr.aria-haspopup]="'menu'"
+                [matMenuTriggerFor]="IndexingModelsMenu"
+                class="button-form-primary listModels-button"
+                mat-button>
+            <mat-icon aria-hidden="true" class="fab fa-wpforms" matPrefix></mat-icon>
+            <span [title]="currentIndexingModel.label" class="menu-label">
+                {{ currentIndexingModel.label }} {{ currentIndexingModel.default ? '(' + this.translate.instant('lang.default') + ')' : '' }}
+            </span>
+            <mat-icon aria-hidden="true" class="fa fa-chevron-down menu-icon"></mat-icon>
+        </button>
+        <mat-menu #IndexingModelsMenu="matMenu" [class]="'menuForm listModels-menu'" role="menu">
+            <div class="menuTitle" role="none">
+                <span [attr.aria-label]="'lang.indexingModel' | translate" [title]="'lang.indexingModel' | translate">
+                    {{ 'lang.indexingModel' | translate }}
+                </span>
+                <mat-form-field
+                        (click)="$event.stopPropagation();"
+                        appearance="outline"
+                        class="smallInput"
+                        floatLabel="never"
+                        style="width: 220px !important;">
+                    <input #listFilter
+                           (click)="$event.stopPropagation();"
+                           (keydown)="$event.stopPropagation()"
+                           [attr.aria-label]="'lang.filterBy' | translate"
+                           [placeholder]="'lang.filterBy' | translate"
+                           autocomplete="off"
+                           id="searchTerm"
+                           matInput
+                    >
+                </mat-form-field>
+            </div>
+            <ng-container
+                    *ngFor="let indexingModel of indexingModels | filterList:listFilter.value:'label'; let i=index">
+                <button
+                        (click)="selectIndexingModel(indexingModel)"
+                        [attr.aria-current]="indexingModel.id === currentIndexingModel.id ? 'true' : null"
+                        [attr.aria-label]="indexingModel.label"
+                        [class.listModels-menu-selected]="indexingModel.id === currentIndexingModel.id"
+                        [class.private]="indexingModel.master !== null"
+                        [title]="indexingModel.label"
+                        mat-menu-item
+                        role="menuitem"
+                        style="display: flex;align-items: center;">
+                    <div *ngIf="indexingModel.master === null"
+                         [title]="indexingModel.label"
+                         style="flex:1;">
+                        {{ indexingModel.label | shorten: 45: '...' }}
+                        {{ indexingModel.default ? '(' + this.translate.instant('lang.default') + ')' : '' }}
+                    </div>
+                    <div *ngIf="indexingModel.master !== null && indexingModel.private" [title]="indexingModel.label"
+                         style="flex:1;">
+                        {{ indexingModel.label | shorten: 45: '...' }}&nbsp;<span
+                            class="listModels-menu-badge">{{ 'lang.private' | translate }}</span>
+                    </div>
+                    <div *ngIf="indexingModel.master !== null && !indexingModel.private" [title]="indexingModel.label"
+                         style="flex:1;">
+                        {{ indexingModel.label | shorten: 45: '...' }}&nbsp;<span
+                            class="listModels-menu-badge">{{ 'lang.public' | translate }}</span>
+                    </div>
+                    <button
+                            (click)="$event.stopPropagation();deletePrivateIndexingModel(indexingModel.id, i)"
+                            *ngIf="indexingModel.id !== currentIndexingModel.id && ((indexingModel.private && indexingModel.owner === headerService.user.id) || (!indexingModel.private && indexingModel.master !== null && privilegeService.hasCurrentUserPrivilege('create_public_indexing_models')))"
+                            [attr.aria-label]="this.translate.instant('lang.delete')"
+                            [title]="this.translate.instant('lang.delete')"
+                            class="listModels-menu-delete"
+                            mat-icon-button>
+                        <mat-icon aria-hidden="true" class="fa fa-trash" color="warn"></mat-icon>
+                    </button>
+                </button>
+            </ng-container>
+        </mat-menu>
+        <button
+                (click)="savePrivateIndexingModel()"
+                [attr.aria-label]="this.translate.instant('lang.createPrivateIndexingModel')"
+                [title]="this.translate.instant('lang.createPrivateIndexingModel')"
+                color="primary"
+                mat-icon-button
+                type="button">
+            <mat-icon aria-hidden="true" class="far fa-copy"></mat-icon>
+        </button>
+    </ng-template>
+</div>

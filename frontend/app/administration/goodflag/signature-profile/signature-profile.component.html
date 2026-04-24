@@ -1,0 +1,64 @@
+<div class="items-container">
+    <h5 [title]="'lang.generalSection' | translate"
+        class="item-section">{{ 'lang.generalSection' | translate | uppercase }}</h5>
+    <hr>
+    <div id="label" class="item">
+        <span [title]="'lang.label' | translate">
+            {{ 'lang.label' | translate }}
+        </span>
+        <span [title]="signatureProfile.name">
+            {{ signatureProfile.name }}
+        </span>
+    </div>
+    <div id="creationDate" class="item">
+        <span [title]="'lang.creationDate' | translate">
+            {{ 'lang.creationDate' | translate }}
+        </span>
+        <span [title]="signatureProfile.created | date: 'dd/MM/yyyy HH:mm'">
+            {{ signatureProfile.created | date: 'dd/MM/yyyy HH:mm' }}
+        </span>
+    </div>
+    <div id="updateDate" class="item">
+        <span [title]="'lang.updateDate' | translate">
+            {{ 'lang.updateDate' | translate }}
+        </span>
+        <span [title]="signatureProfile.updated | date: 'dd/MM/yyyy HH:mm'">
+            {{ signatureProfile.updated | date: 'dd/MM/yyyy HH:mm' }}
+        </span>
+    </div>
+    <h5 [title]="'lang.signature' | translate" class="item-section" style="margin-top: 30px">
+        {{ 'lang.signature' | translate | uppercase }}</h5>
+    <hr>
+    <div id="documentType" class="item">
+        <span [title]="'lang.documentType' | translate">
+            {{ 'lang.documentType' | translate }}
+        </span>
+        <span [title]="signatureProfile.documentType">
+            {{ signatureProfile.documentType }}
+        </span>
+    </div>
+    <div id="signatureType" class="item">
+        <span [title]="'lang.signatureType' | translate">
+            {{ 'lang.signatureType' | translate }}
+        </span>
+        <span [title]="signatureProfile.signatureType">
+            {{ signatureProfile.signatureType }}
+        </span>
+    </div>
+    <div id="forceScrollDocument" class="item">
+        <span [title]="'lang.forceScrollDocument' | translate">
+            {{ 'lang.forceScrollDocument' | translate }}
+        </span>
+        <span [title]="functions.booleanToYesNo(signatureProfile.forceScrollDocument)">
+            {{ functions.booleanToYesNo(signatureProfile.forceScrollDocument) }}
+        </span>
+    </div>
+    <div id="pdfSignatureImageText" class="item">
+        <span [title]="'lang.pdfSignatureImageText' | translate">
+            {{ 'lang.pdfSignatureImageText' | translate }}
+        </span>
+        <span [title]="signatureProfile.pdfSignatureImageText">
+            {{ signatureProfile.pdfSignatureImageText | shorten: 40: '...' }}
+        </span>
+    </div>
+</div>

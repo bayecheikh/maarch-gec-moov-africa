@@ -1,0 +1,185 @@
+<div *ngIf="isLoadingResults" class="example-loading-shade">
+    <mat-spinner
+            *ngIf="isLoadingResults"
+            [attr.aria-live]="'polite'"
+            role="status">
+    </mat-spinner>
+</div>
+<div class="table-head">
+    <div class="table-head-result">
+        <form (ngSubmit)="directSearchHistory()" role="form">
+            <mat-form-field floatLabel="never" style="font-size: 13px;">
+                <input #autoCompleteInput (click)="$event.stopPropagation()" [formControl]="searchHistory"
+                       [matAutocomplete]="auto"
+                       [placeholder]="'lang.filterBy' | translate"
+                       [title]="'lang.filterBy' | translate"
+                       matInput maxlength="128" type="text">
+                <mat-autocomplete
+                    #auto="matAutocomplete"
+                    (opened)="initFilterListHistory()"
+                    (optionSelected)="addItemFilter($event.option)">
+                    <mat-option *ngIf="loadingFilters" disabled>
+                        <div style="display: flex;justify-content: center;">
+                            <mat-spinner
+                                    [attr.aria-live]="'polite'"
+                                    diameter="35"
+                                    role="status">
+                            </mat-spinner>
+                        </div>
+                    </mat-option>
+                    <ng-container *ngIf="filterList!==null && !loadingFilters">
+                        <ng-container *ngFor="let keyVal of filterList | keyvalue">
+                            <mat-optgroup *ngIf="(filteredList[keyVal.key] | async)?.length > 0"
+                                          [attr.aria-label]="'lang.' + keyVal.key | translate"
+                                          [label]="'lang.' + keyVal.key | translate"
+                                          [title]="'lang.' + keyVal.key | translate"
+                                          class="filterList"
+                                          role="group">
+                                <mat-option *ngFor="let filter of filteredList[keyVal.key] | async | sortBy : 'label'"
+                                            [disabled]="filter.used"
+                                            [id]="keyVal.key"
+                                            [style.color]="!filter.used ? filterColor[keyVal.key] : ''"
+                                            [title]="filter.label"
+                                            [value]="filter">
+                                    {{ filter.label }}
+                                </mat-option>
+                            </mat-optgroup>
+                        </ng-container>
+                    </ng-container>
+                </mat-autocomplete>
+                <button
+                        (click)="directSearchHistory()"
+                        [title]="'lang.search' | translate"
+                        mat-button
+                        mat-icon-button
+                        matSuffix
+                        style="float: right" type="submit">
+                    <mat-icon aria-hidden="true" class="fa fa-search" color="primary">
+                    </mat-icon>
+                </button>
+                <button (click)="searchHistory.setValue(''); directSearchHistory()"
+                        *ngIf="searchHistory.value"
+                        [title]="'lang.search' | translate" aria-label="Clear"
+                        mat-button mat-icon-button
+                        matSuffix style="float: right">
+                    <mat-icon aria-hidden="true" class="fas fa-times" style="color:#B3B3B3"></mat-icon>
+                </button>
+            </mat-form-field>
+        </form>
+    </div>
+    <button
+            (click)="switchHistoryMode()"
+            *ngIf="privilegeService.hasCurrentUserPrivilege('view_full_history') && privilegeService.hasCurrentUserPrivilege('view_doc_history')"
+            [title]="!fullHistoryMode ? ('lang.viewAllHistory' | translate) : ('lang.viewActionsHistory' | translate)"
+            color="primary"
+            mat-icon-button>
+        <mat-icon
+                [class.fa-exchange-alt]="fullHistoryMode"
+                [class.fa-history]="!fullHistoryMode"
+                aria-hidden="true"
+                class="fas">
+        </mat-icon>
+    </button>
+    <div class="table-head-tool">
+        <span [attr.aria-label]="'lang.browsing' | translate" role="navigation" style="position: relative;">
+            <mat-paginator
+                #paginatorHistoryList
+                (page)="handlePageEvent($event)"
+                [class.pageInput]="router.url.includes('administration/history')"
+                [hidePageSize]="resultsLength === 0"
+                [length]="resultsLength"
+                [pageSizeOptions]="[10, 25, 50, 100, 150]">
+            </mat-paginator>
+            <app-set-page
+                    *ngIf="router.url.includes('administration/history')"
+                    [currentPage]="currentPage"
+                    [pageLength]="pageLength"
+                    [paginator]="paginator">
+            </app-set-page>
+            <!-- <app-select-page [class.noResult]="resultsLength === 0" [paginator]="paginatorHistoryList"></app-select-page> -->
+        </span>
+    </div>
+</div>
+<div [class.table-admin]="resId === null">
+    <div class="filterBadges">
+        <ng-container *ngFor="let keyVal of filterUsed | keyvalue">
+            <ng-container *ngIf="['startDate','endDate'].indexOf(keyVal.key) === -1">
+                <span
+                        (click)="removeItemFilter(filter,keyVal.key,i)"
+                        *ngFor="let filter of filterUsed[keyVal.key]; let i=index;"
+                        [attr.aria-label]="'lang.' + keyVal.key | translate"
+                        [style.background]="filterColor[keyVal.key]"
+                        [title]="'lang.' + keyVal.key | translate"
+                        class="label">
+                    {{ filter.label }}
+                    <mat-icon aria-hidden="true" class="fa fa-times-circle"></mat-icon>
+                </span>
+            </ng-container>
+        </ng-container>
+    </div>
+    <mat-table
+        #tableHistoryListSort="matSort"
+        [dataSource]="data"
+        id="history-list" matSort
+        matSortActive="event_date" matSortDirection="desc"
+        role="presentation" style="width:100%;">
+        <ng-container matColumnDef="event_date">
+            <mat-header-cell *matHeaderCellDef [title]="'lang.event' | translate"
+                             mat-sort-header>{{ 'lang.event' | translate }}
+            </mat-header-cell>
+            <mat-cell
+                    *matCellDef="let element"
+                    [class.smallText]="resId !== null"
+                    [title]="element.event_date | fullDate"
+                    mat-cell
+                    role="cell">
+                <div *ngIf="resId !== null" [title]="element.userLabel" style="font-size: 10px;">
+                    {{ element.userLabel }}
+                </div>
+                <div [title]="element.event_date  | timeAgo : 'full' | ucfirst">
+                    {{ element.event_date  | timeAgo : 'full' | ucfirst }}
+                </div>
+            </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="record_id">
+            <mat-header-cell *matHeaderCellDef
+                             [title]="'lang.technicalId' | translate">{{ 'lang.technicalId' | translate }}
+            </mat-header-cell>
+            <mat-cell *matCellDef="let element" [title]="element.record_id" mat-cell role="cell">
+                {{ element.record_id }}
+            </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="userLabel">
+            <mat-header-cell *matHeaderCellDef [title]="'lang.user' | translate | ucfirst"
+                             mat-sort-header>{{ 'lang.user' | translate | ucfirst }}
+            </mat-header-cell>
+            <mat-cell *matCellDef="let element" [title]="element.userLabel" role="cell">
+                {{ element.userLabel }}
+            </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="info">
+            <mat-header-cell *matHeaderCellDef [title]="'lang.information' | translate" mat-sort-header
+                             style="flex: 2;">{{ 'lang.information' | translate }}
+            </mat-header-cell>
+            <mat-cell *matCellDef="let element" [title]="element.info" role="cell" style="flex: 2;">
+                {{ element.info }}
+            </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="remote_ip">
+            <mat-header-cell *matHeaderCellDef [title]="'lang.ip' | translate"
+                             mat-sort-header>{{ 'lang.ip' | translate }}
+            </mat-header-cell>
+            <mat-cell *matCellDef="let element" [title]="element.remote_ip" role="cell">
+                {{ element.remote_ip }}
+            </mat-cell>
+        </ng-container>
+        <ng-container *ngIf="resId === null">
+            <mat-header-row *matHeaderRowDef="displayedColumnsHistory"></mat-header-row>
+        </ng-container>
+        <mat-row *matRowDef="let row; columns: displayedColumnsHistory;" role="row">
+        </mat-row>
+    </mat-table>
+    <div [title]="resultsLength + ' ' + ('lang.elements' | translate)" class="mat-paginator resultLength">
+        {{ resultsLength }} {{ 'lang.elements' | translate }}
+    </div>
+</div>

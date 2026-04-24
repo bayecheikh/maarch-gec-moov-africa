@@ -1,0 +1,106 @@
+<mat-sidenav-container autosize class="maarch-container">
+    <ng-template #adminMenuTemplate>
+        <mat-nav-list>
+            <a mat-list-item *ngFor="let menu of adminService.getAdminConnectionsSubMenus()" [class.active]="menu.current" [routerLink]="menu.route">
+                <mat-icon color="primary" mat-list-icon [class]="menu.icon"></mat-icon>
+                <p mat-line>
+                    {{menu.label}}
+                </p>
+            </a>
+        </mat-nav-list>
+    </ng-template>
+    <mat-sidenav-content>
+        <div class="bg-head">
+            <div class="bg-head-title" [class.customContainerRight]="appService.getViewMode()">
+                <div class="bg-head-title-label">
+                    <app-header-left></app-header-left>
+                </div>
+                <div class="bg-head-title-tool">
+                    <app-header-right></app-header-right>
+                </div>
+            </div>
+            <div class="bg-head-content" [class.fullContainer]="appService.getViewMode()">
+            </div>
+        </div>
+        <div class="container" [class.fullContainer]="appService.getViewMode()">
+            <div class="container-content">
+                <div *ngIf="loading" style="display:flex;height:100%;">
+                    <mat-spinner style="margin:auto;"></mat-spinner>
+                </div>
+                <mat-card *ngIf="!loading" class="card-app-content">
+                    <form style="display: contents;" (ngSubmit)="onSubmit()" #proConnectForm="ngForm">
+                        <mat-form-field appearance="fill">
+                            <mat-label>{{ 'lang.proConnectUrl' | translate }}</mat-label>
+                            <input
+                                matInput
+                                name="proConnectUrl"
+                                [title]="'lang.proConnectUrl' | translate"
+                                [required]="proConnectConfig.enabled"
+                                [(ngModel)]="proConnectConfig.url">
+                            <mat-error *ngIf="proConnectForm.controls['proConnectUrl']?.hasError('required')">
+                                {{ 'lang.requiredField' | translate }}
+                            </mat-error>
+                        </mat-form-field>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <mat-form-field appearance="fill">
+                                    <mat-label>{{ 'lang.clientId' | translate }}</mat-label>
+                                    <input
+                                    matInput
+                                    name="clientId"
+                                    [title]="'lang.clientId' | translate"
+                                    [required]="!functions.empty(proConnectConfig.url)"
+                                    [(ngModel)]="proConnectConfig.clientId">
+                                <mat-error *ngIf="proConnectForm.controls['clientId']?.hasError('required')">
+                                    {{ 'lang.requiredField' | translate }}
+                                </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div class="col-md-6">
+                                <mat-form-field appearance="fill">
+                                    <mat-label>{{ 'lang.clientSecret' | translate }}</mat-label>
+                                    <input
+                                        matInput
+                                        name="clientSecret"
+                                        [title]="'lang.clientSecret' | translate"
+                                        [required]="!functions.empty(proConnectConfig.url)"
+                                        [(ngModel)]="proConnectConfig.clientSecret">
+                                    <mat-error *ngIf="proConnectForm.controls['clientSecret']?.hasError('required')">
+                                        {{ 'lang.requiredField' | translate }}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                        </div>
+                        <div class="row" style="margin-bottom: 15px; margin-left: 3px;">
+                            <mat-slide-toggle name="toggleProConnectConnection" color="primary" style="margin-bottom: 15px;"
+                            [title]="proConnectConfig.enabled ? ('lang.proConnectEnabled' | translate) : ('lang.proConnectDisabled' | translate)"
+                            [(ngModel)]="proConnectConfig.enabled"
+                            [checked]="proConnectConfig.enabled"
+                            >
+                            {{ proConnectConfig.enabled ? ('lang.proConnectEnabled' | translate) : ('lang.proConnectDisabled' | translate) }}
+                            </mat-slide-toggle>
+                        </div>
+                        <div class="text-center" style="padding:10px;">
+                            <button mat-raised-button
+                                name="validate"
+                                [disabled]="!isValid(proConnectForm)"
+                                [title]="'lang.validate' | translate"
+                                color="primary">
+                                {{ 'lang.validate' | translate }}
+                            </button>
+                            <button mat-raised-button
+                                type="button"
+                                name="cancel"
+                                (click)="cancel()"
+                                [disabled]="!isValid(proConnectForm)"
+                                [title]="'lang.cancel' | translate"
+                                color="default">
+                                {{ 'lang.cancel' | translate }}
+                            </button>
+                        </div>
+                    </form>
+                </mat-card>
+            </div>
+        </div>
+    </mat-sidenav-content>
+</mat-sidenav-container>

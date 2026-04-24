@@ -1,0 +1,67 @@
+<div class="col-md-12">
+    <app-maarch-message
+            *ngIf="!externalSignatoryBookManagerService.canAttachSummarySheet(appExternalVisaWorkflow.visaWorkflow.items)"
+            [content]="'lang.cannotAttachSummarySheet' | translate">
+    </app-maarch-message>
+    <div class="fieldsetdContainer" style="flex:2">
+        <h2>{{ 'lang.visaWorkflow' | translate }} :</h2>
+        <div class="fieldsetdContent">
+            <app-external-visa-workflow
+                #appExternalVisaWorkflow
+                (workflowUpdated)="setWorkflow($event); workflowUpdated.emit($event)"
+                [adminMode]="true"
+                [injectDatas]="injectDatasParam"
+                [resId]="resIds.length === 1 ? resIds[0] : null">
+            </app-external-visa-workflow>
+            <div *ngIf="appExternalVisaWorkflow.getUsersMissingInSignatureBook().length > 0"
+                 class="alert-message alert-message-danger" role="alert">
+                <b>{{ appExternalVisaWorkflow.getUsersMissingInSignatureBook().join(', ') }}</b>
+                {{ getUsersMissingInSignatureBookErrorMessage() }}
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-md-12" style="text-align: right;">
+    <button
+            *ngIf="additionalsInfos.attachments.length === 1 && externalSignatoryBookManagerService.canManageSignaturesPositions()"
+            [disabled]="!isValidParaph()"
+            [matMenuTriggerFor]="menu"
+            color="primary"
+            mat-button
+            type="button">
+        {{ 'lang.manageSignaturesPositions' | translate }}
+    </button>
+    <mat-menu #menu="matMenu"
+              class="docToSignTemplateMenu">
+        <button
+                (click)="openSignaturePosition(resource)"
+                *ngFor="let resource of resourcesToSign"
+                mat-menu-item
+                style="font-size:12px;"
+        >
+            <mat-icon
+                    [class.noPosition]="!hasPositions(resource)"
+                    [class.position]="hasPositions(resource)"
+                    class="fas fa-compress-arrows-alt"
+                    style="height: auto;">
+            </mat-icon>
+            <span>
+                <span color="primary">{{ resource.chrono }}</span>&nbsp;- {{ resource.title }}
+            </span>
+        </button>
+    </mat-menu>
+</div>
+<div *ngIf="additionalsInfos.visaWorkflowError" class="col-md-12">
+    <div>
+        <div class="alert-message alert-message-danger mailList" role="alert">
+            <p>
+                {{ 'lang.canNotMakeAction' | translate }} :
+            </p>
+            <ul>
+                <li *ngFor="let visaError of additionalsInfos.visaWorkflowError">
+                    <b>{{ visaError.alt_identifier }}</b> : {{ 'lang.' + visaError.reason | translate }}
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

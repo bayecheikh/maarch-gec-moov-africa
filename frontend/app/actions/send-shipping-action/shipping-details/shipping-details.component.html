@@ -1,0 +1,33 @@
+<div class="header-container">
+    <span style="font-size: 16px;" [title]="'lang.shippingDetails' | translate">{{ 'lang.shippingDetails' | translate }}</span>
+    <button mat-icon-button (click)="closeSidenav.emit()" [title]="'lang.closeSidePanel' | translate">
+        <mat-icon aria-hidden="true" class="fa fa-arrow-right"></mat-icon>
+    </button>
+</div>
+<ng-container>
+    <div *ngIf="loading" class="loading" style="display:flex;height:100%;">
+        <mat-spinner style="margin:auto;"></mat-spinner>
+    </div>
+</ng-container>
+<ng-container *ngIf="!loading">
+    <div *ngFor="let shipping of formattedShippingDetails; let i = index">
+        <div class="header-content" [id]="shipping.recipientId">
+            <span style="width: 40%" [title]="('lang.digitalPackageOrder' | translate) + ' ' + i+1">{{ 'lang.digitalPackageOrder' | translate }} {{ i + 1 }}</span>
+            <span [title]="shipping.contactLabel">{{ shipping.contactLabel }}</span>
+        </div>
+        <div *ngFor="let document of shipping.documents" class="shipping-content">
+            <span [title]="document.title + ' - ' + document.chrono + ' (' + getType(document.type) + ' )'">{{ document.title }} - {{document.chrono}} &nbsp;<span *ngIf="document.type"> ({{ getType(document.type) }})</span></span>
+            <button
+                    mat-icon-button
+                    color="primary"
+                    [title]="'lang.viewResource' | translate"
+                    (click)="$event.stopPropagation(); viewDocument(document)"
+                    (mouseenter)="viewThumbnail(document);"
+                    (mouseleave)="closeThumbnail();"
+                    (focus)="viewThumbnail(document);"
+                    (blur)="closeThumbnail();">
+                <mat-icon aria-hidden="true" class="fa fa-eye"></mat-icon>
+            </button>
+        </div>
+    </div>
+</ng-container>

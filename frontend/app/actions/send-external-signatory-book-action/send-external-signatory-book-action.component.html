@@ -1,0 +1,135 @@
+<div class="mat-dialog-content-container">
+    <h1 class="externalSignatoryBookTitle" mat-dialog-title>
+        {{ data.action?.label }} &nbsp;
+        <div *ngIf="authService.externalSignatoryBook !== null" [title]="'lang.enabledSignatoryBook' | translate"
+             class="badge">
+            {{ getTitle() }}
+        </div>
+    </h1>
+    <div mat-dialog-content>
+        <div *ngIf="loading" class="loading" style="display:flex;height:100%;">
+            <mat-spinner style="margin:auto;"></mat-spinner>
+        </div>
+        <mat-sidenav-container *ngIf="!functions.empty(authService.externalSignatoryBook)" autosize
+                               style="height:100%;">
+            <mat-sidenav-content [ngStyle]="{'width': data.resIds.length === 1 ? '580px' : ''}"
+                                 style="background: white;">
+                <div class="row" style="margin: 0;">
+                    <div class="col-md-12">
+                        {{ 'lang.makeActionOn' | translate }}
+                        <b *ngIf="data.resIds.length === 0" class="highlight"
+                           color="primary">{{ 'lang.currentIndexingMail' | translate }}</b>
+                        <b *ngIf="data.resIds.length === 1" class="highlight"
+                           color="primary">{{ data.resource.chrono }}</b>
+                        <b *ngIf="data.resIds.length > 1" class="highlight" color="primary">{{ data.resIds.length }}
+                            {{ 'lang.elements' | translate }}</b> ?
+                    </div>
+                    <div *ngIf="data.resIds.length === 1" class="toggleIntegration">
+                        <button (click)="onSidenavStateChanged()" *ngIf="data.resIds.length === 1" [title]="getIntegratedAttachments() + ' ' + ('lang.attachmentsInSignatoryBook' | translate)"
+                                class="attachmentIcon"
+                                color="primary"
+                                mat-icon-button>
+                            <mat-icon [matBadge]="getIntegratedAttachments()"
+                                      fontIcon="fa-paperclip fa-2x"
+                                      fontSet="fas">
+                            </mat-icon>
+                        </button>
+                        <mat-checkbox (click)="toggleIntegration(inteKey.key)" *ngFor="let inteKey of integrationsInfo | keyvalue"
+                                      [checked]="data.resource.integrations[inteKey.key]"
+                                      color="primary">{{ 'lang.' + inteKey.key + '_doc' | translate }}
+                        </mat-checkbox>
+                    </div>
+                    <div *ngIf="resourcesMailing.length > 0" class="alert-message alert-message-info" role="alert">
+                        <p>{{ 'lang.mailingActionInformations' | translate }}</p>
+                        <ul>
+                            <li *ngFor="let ressource of resourcesMailing">
+                                <b>{{ ressource.alt_identifier }}</b>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <app-i-paraph
+                            #iParapheur
+                            *ngIf="['iParapheur', 'pastell'].indexOf(authService.externalSignatoryBook.id) > -1 && !loading"
+                            [additionalsInfos]="additionalsInfos"
+                            [externalSignatoryBookDatas]="externalSignatoryBookDatas">
+                        </app-i-paraph>
+                        <app-ixbus-paraph
+                            #ixbus
+                            *ngIf="authService.externalSignatoryBook.id === 'ixbus' && !loading"
+                            [additionalsInfos]="additionalsInfos"
+                            [externalSignatoryBookDatas]="externalSignatoryBookDatas">
+                        </app-ixbus-paraph>
+                        <app-fast-paraph
+                            #fastParapheur
+                            *ngIf="!loading && authService.externalSignatoryBook.id === 'fastParapheur' && !authService.externalSignatoryBook.integratedWorkflow"
+                            [additionalsInfos]="additionalsInfos"
+                            [externalSignatoryBookDatas]="externalSignatoryBookDatas">
+                        </app-fast-paraph>
+                        <app-maarch-paraph
+                            #externalSignatoryBookComponent
+                            (workflowUpdated)="visaWorkflowClone = $event"
+                            *ngIf="!functions.empty(externalSignatoryBook.signatoryBookEnabled) && !loading && authService.externalSignatoryBook.integratedWorkflow"
+                            [additionalsInfos]="additionalsInfos"
+                            [externalSignatoryBookDatas]="externalSignatoryBookDatas"
+                            [resIds]="data.resIds"
+                            [resourcesToSign]="resourcesToSign">
+                        </app-maarch-paraph>
+                        <div *ngIf="additionalsInfos.noAttachment.length !== 0 && externalSignatoryBookDatas.objectSent === 'attachment'"
+                             class="col-md-12">
+                            <div>
+                                <div class="alert-message alert-message-danger mailList" role="alert">
+                                    <p>
+                                        {{ 'lang.canNotMakeAction' | translate }} :
+                                    </p>
+                                    <ul>
+                                        <li *ngFor="let attachment of additionalsInfos.noAttachment">
+                                            <b>{{ attachment.alt_identifier }}</b>
+                                            : {{ 'lang.' + attachment.reason | translate }}
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12" style="padding-top: 10px;">
+                        <app-note-editor #noteEditor [resIds]="data.resIds"></app-note-editor>
+                    </div>
+                    <ng-container *ngIf="showToggle">
+                        <div class="col-md-12" style="margin: 10px 0 10px 0;">
+                            <mat-slide-toggle [(ngModel)]="canGoToNextRes" [checked]="canGoToNextRes"
+                                              [title]="'lang.canGoToNextResDesc' | translate"
+                                              color="primary" name="history">
+                                {{ 'lang.canGoToNextRes' | translate }}
+                            </mat-slide-toggle>
+                        </div>
+                        <mat-divider></mat-divider>
+                    </ng-container>
+                </div>
+            </mat-sidenav-content>
+            <mat-sidenav #snav2 *ngIf="data.resIds.length === 1"
+                         [mode]="appService.getViewMode() ? 'over' : 'side'"
+                         [ngStyle]="{'width': '600px'}"
+                         [opened]="true"
+                         autoFocus="false"
+                         fixedTopGap="56"
+                         position='end'
+                         style="overflow-x:hidden;">
+                <app-attachments-list #attachmentsList
+                                      (afterActionAttachment)="afterAttachmentToggle($event)"
+                                      [isModal]="true"
+                                      [resId]="data.resIds[0]">
+                </app-attachments-list>
+            </mat-sidenav>
+        </mat-sidenav-container>
+    </div>
+    <span class="divider-modal"></span>
+    <div class="actions" mat-dialog-actions>
+        <button (click)="onSubmit()" [disabled]="loading || !isValidAction()" color="primary" mat-button
+                mat-raised-button>{{ 'lang.validate' | translate }}
+        </button>
+        <button [disabled]="loading" [mat-dialog-close]="" mat-button
+                mat-raised-button>{{ 'lang.cancel' | translate }}
+        </button>
+    </div>
+</div>

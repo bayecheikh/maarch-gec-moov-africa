@@ -1,0 +1,225 @@
+<ng-container *ngIf="loading; else elseTemplate">
+    <div class="loading">
+        <mat-spinner></mat-spinner>
+    </div>
+</ng-container>
+<ng-template #elseTemplate>
+    <mat-card class="contact-card">
+        <div *ngIf="selectable" [class.selected]="contact.selected" class="selectable">
+            <button (click)="toggleContact(contact)" *ngIf="!contact.selected" color="primary" mat-raised-button
+                    style="line-height: 15px;padding: 5px;">
+                <span>{{ 'lang.selectDuplicatedContact' | translate }}</span><br><small
+                    style="font-size:80%">{{ contact.resourcesCount }} {{ 'lang.associatedElements' | translate }}</small>
+            </button>
+            <button (click)="toggleContact(contact)" *ngIf="contact.selected" color="primary" mat-raised-button
+                    style="line-height: 15px;padding: 10px;"><i
+                    class="far fa-check-circle"></i> {{ 'lang.selectedContact' | translate }}
+            </button>
+        </div>
+        <div *ngIf="!contact.enabled" class="disabledContact">{{ 'lang.contactDisabled' | translate }}</div>
+        <mat-card-header>
+            <div [class.fa-address-card]="contact.type === 'contact'" [class.fa-sitemap]="contact.type ==='entity'"
+                 [class.fa-user]="contact.type ==='user'"
+                 [class.fa-users]="contact.type ==='contactGroup'"
+                 [title]="'lang.contact_' + contact.type | translate"
+                 class="contact-header-image fa" mat-card-avatar>
+            </div>
+            <mat-card-title
+                    *ngIf="!functionsService.empty(contact.firstname) || !functionsService.empty(contact.lastname)"
+                    [title]="(contact.civility.label ? contact.civility.label + ' ' : '') + contact.firstname + ' ' + contact.lastname">
+                <sup *ngIf="!functionsService.empty(contact.civility)"
+                     [class.newData]="isNewValue('civility')"
+                     style="color: #666;">{{ contact.civility.abbreviation }}&nbsp;</sup>{{ contact.firstname }}
+                {{ contact.lastname }}
+            </mat-card-title>
+            <mat-card-title
+                    *ngIf="functionsService.empty(contact.firstname) && functionsService.empty(contact.lastname)"
+                    [class.newData]="isNewValue('company')" [title]="contact.company">
+                {{ contact.company }}
+            </mat-card-title>
+            <mat-card-subtitle *ngIf="!functionsService.empty(contact.function)"
+                               [class.newData]="isNewValue('function')"
+                               [title]="contact.function">
+                {{ contact.function }}&nbsp;
+            </mat-card-subtitle>
+            <i *ngIf="contact.type === 'contact' && !functionsService.empty(contact.fillingRate.color)"
+               [style.color]="contact.fillingRate.color"
+               [title]="'lang.contactsFillingRate' | translate" class="contact-filling fa fa-circle"></i>
+        </mat-card-header>
+        <mat-card-content>
+            <mat-list>
+                <h3 mat-subheader>{{ 'lang.contactDetails' | translate }}</h3>
+                <mat-list-item
+                        *ngIf="(!functionsService.empty(contact.firstname) || !functionsService.empty(contact.lastname)) && !functionsService.empty(contact.company)"
+                        class="contact-item">
+                    <mat-icon [title]="'lang.contactsParameters_company' | translate"
+                              class="contact-group far fa-building"
+                              mat-list-icon></mat-icon>
+                    <p [class.newData]="isNewValue('company')" class="contact-content" mat-line> {{ contact.company }}
+                    </p>
+                </mat-list-item>
+                <mat-list-item *ngIf="!functionsService.empty(contact.department)" class="contact-item">
+                    <mat-icon [title]="'lang.contactsParameters_department' | translate"
+                              class="contact-group fa fa-sitemap"
+                              mat-list-icon></mat-icon>
+                    <p [class.newData]="isNewValue('department')" class="contact-content" mat-line>
+                        {{ contact.department }} </p>
+                </mat-list-item>
+                <mat-list-item *ngIf="!functionsService.empty(contact.email)" class="contact-item">
+                    <mat-icon [title]="'lang.email' | translate"
+                              class="contact-group far fa-envelope"
+                              mat-list-icon>
+                    </mat-icon>
+                    <a [class.confidential]="contactService.isConfidentialFieldWithoutValue(contact, 'email')"
+                       [class.newData]="isNewValue('email')"
+                       [class.undefined-value]="functionsService.empty(contactService.getContactValueByType(contact.email, contact.type))"
+                       [href]="getHref(contact)"
+                       [title]="contactService.isConfidentialFieldWithoutValue(contact, 'email') ? ('lang.confidentialData' | translate) : (contactService.getContactValueByType(contact.email, contact.type) ?? 'lang.undefined' | translate)"
+                       class="contact-content"
+                       matLine>
+                        <ng-container
+                                *ngIf="contactService.isConfidentialFieldWithoutValue(contact, 'email') && (contact.type === 'contact' && !functionsService.empty(contact.email?.value))">
+                            <span>
+                                <mat-icon class="fas fa-user-lock"></mat-icon>
+                            </span>
+                        </ng-container>
+                        {{ contactService.getContactValueByType(contact.email, contact.type) ?? 'lang.undefined' | translate }}
+                    </a>
+                </mat-list-item>
+                <mat-list-item *ngIf="!functionsService.empty(contact.phone)" class="contact-item">
+                    <mat-icon [title]="'lang.phoneNumber' | translate" class="contact-group fas fa-phone" mat-list-icon>
+                    </mat-icon>
+                    <p [class.confidential]="contactService.isConfidentialFieldWithoutValue(contact, 'phone')"
+                       [class.newData]="isNewValue('phone')"
+                       [title]="contactService.isConfidentialFieldWithoutValue(contact, 'phone') ? ('lang.confidentialData' | translate) : (contactService.getContactValueByType(contact.phone, contact.type) ?? 'lang.undefined' | translate)"
+                       class="contact-content"
+                       mat-line>
+                        <ng-container
+                                *ngIf="contactService.isConfidentialFieldWithoutValue(contact, 'phone') && (contact.type === 'contact' && !functionsService.empty(contact.phone?.value))">
+                            <span>
+                                <mat-icon class="fas fa-user-lock"></mat-icon>
+                            </span>
+                        </ng-container>
+                        <span [class.undefined-value]="functionsService.empty(contactService.getContactValueByType(contact.phone, contact.type))">
+                            {{ contactService.getContactValueByType(contact.phone, contact.type) ?? 'lang.undefined' | translate }}
+                        </span>
+                    </p>
+                </mat-list-item>
+                <mat-list-item (click)="goTo(contact)"
+                               *ngIf="contactService.checkAddressValidity(contact)"
+                               [class.contact-address]="!contactService.isConfidentialAddress(contact)"
+                               [title]="'lang.address' | translate"
+                               style="margin-top: -5px"
+                >
+                    <mat-icon class="contact-group fas fa-map-marker-alt" mat-list-icon></mat-icon>
+                    <p *ngIf="contactService.isConfidentialAddress(contact)"
+                       [title]="'lang.confidentialData' | translate"
+                       class="contact-content confidential"
+                       mat-line>
+                        <mat-icon class="fas fa-user-lock"></mat-icon>
+                        <span>
+                            {{ 'lang.confidentialData' | translate }}
+                        </span>
+                    </p>
+                    <div *ngIf="!contactService.isConfidentialAddress(contact)" style="padding-left: 16px">
+                        <p *ngIf="!functionsService.empty(contact.addressAdditional1)"
+                           [class.newData]="isNewValue('addressAdditional1')" class="contact-content"
+                           mat-line> {{ contactService.getContactValueByType(contact.addressAdditional1, contact.type) }}</p>
+                        <p *ngIf="!functionsService.empty(contact.addressNumber) || !functionsService.empty(contact.addressStreet)"
+                           class="contact-content"
+                           mat-line><span
+                                [class.newData]="isNewValue('addressNumber')">{{ contactService.getContactValueByType(contact.addressNumber, contact.type) }}</span>&nbsp;<span
+                                [class.newData]="isNewValue('addressStreet')">{{ contactService.getContactValueByType(contact.addressStreet, contact.type) }}</span>
+                        </p>
+                        <p *ngIf="!functionsService.empty(contact.addressAdditional2)"
+                           [class.newData]="isNewValue('addressAdditional2')" class="contact-content"
+                           mat-line>{{ contactService.getContactValueByType(contact.addressAdditional2, contact.type) }} </p>
+                        <p *ngIf="!functionsService.empty(contact.addressPostcode) || !functionsService.empty(contact.addressTown)"
+                           class="contact-content"
+                           mat-line>
+                            {{ contactService.getContactValueByType(contact.addressPostcode, contact.type) }} {{ contactService.getContactValueByType(contact.addressTown, contact.type) }} </p>
+                        <p *ngIf="!functionsService.empty(contact.addressCountry)"
+                           [class.newData]="isNewValue('addressCountry')" class="contact-content"
+                           mat-line> {{ contactService.getContactValueByType(contact.addressCountry, contact.type) }} </p>
+                    </div>
+                </mat-list-item>
+                <ng-container *ngIf="!contactService.isConfidentialAddress(contact)">
+                    <mat-list-item *ngIf="!functionsService.empty(contact.sector)" class="contact-item">
+                        <mat-icon [title]="'lang.contactsParameters_sector' | translate"
+                                  class="contact-group fas fa-map-marked-alt"
+                                  mat-list-icon>
+                        </mat-icon>
+                        <p class="contact-content"
+                           mat-line> {{ contactService.getContactValueByType(contact.sector, contact.type) }}</p>
+                    </mat-list-item>
+                </ng-container>
+            </mat-list>
+            <mat-expansion-panel *ngIf="!emptyOtherInfo(contact)" [expanded]="selectable">
+                <mat-expansion-panel-header>
+                    <mat-panel-title>
+                        {{ 'lang.othersInfos' | translate }}
+                    </mat-panel-title>
+                </mat-expansion-panel-header>
+                <mat-list>
+                    <mat-list-item *ngIf="!functionsService.empty(contact.notes)" [title]="'lang.note' | translate"
+                                   class="contact-item">
+                        <mat-icon class="contact-group far fa-sticky-note" mat-list-icon></mat-icon>
+                        <p [class.newData]="isNewValue('notes')" [title]="contact.notes" class="contact-content"
+                           mat-line>
+                            {{ contact.notes }} </p>
+                    </mat-list-item>
+                    <ng-container *ngIf="!functionsService.empty(contact.communicationMeans)">
+                        <mat-list-item *ngIf="!functionsService.empty(contact.communicationMeans.url)"
+                                       [title]="'lang.communicationMean' | translate"
+                                       class="contact-item">
+                            <mat-icon class="contact-group fas fa-hashtag" mat-list-icon></mat-icon>
+                            <p [class.newData]="isNewValue('communicationMeans.url')"
+                               [title]="contact.communicationMeans.url | splitLoginPwd" class="contact-content"
+                               mat-line>
+                                {{ contact.communicationMeans.url | splitLoginPwd }}
+                            </p>
+                        </mat-list-item>
+                        <mat-list-item *ngIf="!functionsService.empty(contact.communicationMeans.email)"
+                                       [title]="'lang.emailM2M' | translate"
+                                       class="contact-item">
+                            <mat-icon class="contact-group fas fa-hashtag" mat-list-icon></mat-icon>
+                            <p [class.newData]="isNewValue('communicationMeans.email')"
+                               [title]="contact.communicationMeans.email" class="contact-content"
+                               mat-line>
+                                {{ contact.communicationMeans.email }}
+                            </p>
+                        </mat-list-item>
+                        <mat-list-item *ngIf="!functionsService.empty(contact.communicationMeans.login)"
+                                       [title]="'lang.userIdMaarch2MaarchDesc' | translate"
+                                       class="contact-item">
+                            <mat-icon class="contact-group fas fa-hashtag" mat-list-icon></mat-icon>
+                            <p [class.newData]="isNewValue('communicationMeans.login')"
+                               [title]="contact.communicationMeans.login" class="contact-content"
+                               mat-line>
+                                {{ contact.communicationMeans.login }}
+                            </p>
+                        </mat-list-item>
+                        <mat-list-item
+                                *ngIf="!functionsService.empty(contact.externalId) && !functionsService.empty(contact.externalId['m2m'])"
+                                [title]="'lang.IdMaarch2Maarch' | translate"
+                                class="contact-item">
+                            <mat-icon class="contact-group fas fa-hashtag" mat-list-icon></mat-icon>
+                            <p [title]="contact.externalId['m2m']" class="contact-content" mat-line>
+                                {{ contact.externalId['m2m'] }} </p>
+                        </mat-list-item>
+                    </ng-container>
+                    <ng-container *ngFor="let keyVal of contact.customFields | keyvalue">
+                        <mat-list-item *ngIf="keyVal.value.value !== null" class="contact-item">
+                            <mat-icon [title]="keyVal.value.label" class="contact-group fas fa-hashtag"
+                                      mat-list-icon>
+                            </mat-icon>
+                            <p [class.newData]="isNewValue(keyVal)" [title]="keyVal.value.value" class="contact-content"
+                               mat-line> {{ keyVal.value.value }}
+                            </p>
+                        </mat-list-item>
+                    </ng-container>
+                </mat-list>
+            </mat-expansion-panel>
+        </mat-card-content>
+    </mat-card>
+</ng-template>

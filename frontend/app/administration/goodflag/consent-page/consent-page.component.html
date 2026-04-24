@@ -1,0 +1,80 @@
+<div class="items-container">
+    <h5 [title]="'lang.generalSection' | translate"
+        class="item-section">{{ 'lang.generalSection' | translate | uppercase }}</h5>
+    <hr>
+    <div id="label" class="item">
+        <span [title]="'lang.label' | translate">
+            {{ 'lang.label' | translate }}
+        </span>
+        <span [title]="consentPage.name">
+            {{ consentPage.name }}
+        </span>
+    </div>
+    <div id="creationDate" class="item">
+        <span [title]="'lang.creationDate' | translate">
+            {{ 'lang.creationDate' | translate }}
+        </span>
+        <span [title]="consentPage.created | date: 'dd/MM/yyyy HH:mm'">
+            {{ consentPage.created | date: 'dd/MM/yyyy HH:mm' }}
+        </span>
+    </div>
+    <div id="updateDate" class="item">
+        <span [title]="'lang.updateDate' | translate">
+            {{ 'lang.updateDate' | translate }}
+        </span>
+        <span [title]="consentPage.updated | date: 'dd/MM/yyyy HH:mm'">
+            {{ consentPage.updated | date: 'dd/MM/yyyy HH:mm' }}
+        </span>
+    </div>
+    <h5 [title]="'lang.consent' | translate" class="item-section" style="margin-top: 30px">
+        {{ 'lang.consent' | translate | uppercase }}</h5>
+    <hr>
+    <div id="stepType" class="item">
+        <span [title]="'lang.stepType' | translate">
+            {{ 'lang.stepType' | translate }}
+        </span>
+        <span [title]="consentPage.stepType">
+            {{ consentPage.stepType }}
+        </span>
+    </div>
+    <div id="authenticateUser" class="item">
+        <span [title]="'lang.authenticateUser' | translate">
+            {{ 'lang.authenticateUser' | translate }}
+        </span>
+        <span [title]="functions.booleanToYesNo(consentPage.authenticateUser)">
+            {{ functions.booleanToYesNo(consentPage.authenticateUser) }}
+        </span>
+    </div>
+    <div *ngIf="consentPage.signingMode" class="item" id="signingMode">
+        <span [title]="'lang.signingMode' | translate">
+            {{ 'lang.signingMode' | translate }}
+        </span>
+        <span [title]="consentPage.signingMode">
+            {{ consentPage.signingMode }}
+        </span>
+    </div>
+    <div *ngIf="consentPage.strictCertificateControl" class="item" id="strictCertificateControl">
+        <span [title]="'lang.strictCertificateControl' | translate">
+            {{ 'lang.strictCertificateControl' | translate }}
+        </span>
+        <span [title]="functions.booleanToYesNo(consentPage.strictCertificateControl)">
+            {{ functions.booleanToYesNo(consentPage.strictCertificateControl) }}
+        </span>
+    </div>
+    <div class="item" id="allowOrganization">
+        <span [title]="'lang.allowOrganization' | translate">
+            {{ 'lang.allowOrganization' | translate }}
+        </span>
+        <span [title]="functions.booleanToYesNo(consentPage.allowOrganization)">
+            {{ functions.booleanToYesNo(consentPage.allowOrganization) }}
+        </span>
+    </div>
+    <div *ngIf="consentPage.keystoreTypes" class="item" id="keystoreTypes">
+        <span [title]="'lang.keystoreTypes' | translate">
+            {{ 'lang.keystoreTypes' | translate }}
+        </span>
+        <span [title]="consentPage.keystoreTypes">
+            {{ consentPage.keystoreTypes }}
+        </span>
+    </div>
+</div>

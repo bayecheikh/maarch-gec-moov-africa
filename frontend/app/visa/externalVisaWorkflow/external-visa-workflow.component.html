@@ -1,0 +1,199 @@
+<div *ngIf="loading" style="display:flex;padding: 10px;">
+    <mat-spinner style="margin:auto;"></mat-spinner>
+</div>
+<mat-list *ngIf="!loading">
+    <mat-form-field *ngIf="!functions.empty(workflowTypes)">
+        <mat-label>{{ 'lang.workflowType' | translate }}</mat-label>
+        <mat-select [(ngModel)]="workflowType" [title]="getWorkflowTypeLabel(workflowType)"
+                    name="workflowTypes"
+                    required>
+            <mat-option *ngFor="let type of workflowTypes" [value]="type.id">
+                {{ type.label }}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
+    <div style="display: flex;">
+        <app-plugin-autocomplete
+                (triggerEvent)="addItemToWorkflow($event)"
+                (updateVisaWorkflow)="updateVisaWorkflow($event)"
+                *ngIf="adminMode"
+                [connectorLength]="otpConfig"
+                [fromExternalWorkflow]="canAddExternalUser()"
+                [labelPlaceholder]="'lang.addPerson' | translate"
+                [resId]="resId"
+                [routeDatas]="getRouteDatas()"
+                [subInfoKey]="'email'"
+                [targetSearchKey]="'idToDisplay'"
+                appearance="outline"
+                style="flex: 1"
+        >
+        </app-plugin-autocomplete>
+        <button (click)="reorganizeWorkflow()"
+                *ngIf="externalSignatoryBookManagerService.signatoryBookEnabled === 'goodflag' && adminMode"
+                [disabled]="visaWorkflow.items.length <= 1"
+                [title]="'lang.reorganizeWorkflow' | translate"
+                mat-icon-button>
+            <mat-icon class="fas fa-arrow-down-1-9" color="primary"></mat-icon>
+        </button>
+    </div>
+    <div #dataAvailableList="cdkDropList" (cdkDropListDropped)="drop($event)" [cdkDropListData]="visaWorkflow.items"
+         [cdkDropListDisabled]="!adminMode"
+         cdkDropList class="cdk-list">
+        <div *ngIf="adminMode && visaWorkflow.items.length === 0" class="emptyContent">
+            {{ 'lang.noVisaWorkflow' | translate }}
+        </div>
+        <div *ngIf="!adminMode && visaWorkflow.items.length === 0" class="emptyContent">
+            {{ 'lang.cannotAddVisaCircuit' | translate }}
+        </div>
+        <mat-list-item
+                *ngFor="let diffusion of visaWorkflow.items;let i=index"
+                [cdkDragDisabled]="!canManageUser()"
+                [class.interrupt]="(!functions.empty(diffusion.process_date) && diffusion.status !== 'VAL' && externalSignatoryBookManagerService.isMappingWithTechnicalStatus()) || diffusion.status === 'END' || diffusion.status === 'REF'"
+                [class.notDraggable]="!canManageUser()"
+                [class.notEditable]="!adminMode"
+                [class.processed]="!functions.empty(diffusion.process_date) && diffusion.status === 'VAL'"
+                cdkDrag
+                class="columns workflow"
+                disableRipple>
+            <mat-icon *ngIf="(getCurrentVisaUserIndex() === i && !adminMode) && diffusion.status !== 'END'"
+                      class="fa fa-chevron-right fa-2x" color="accent" mat-list-icon>
+            </mat-icon>
+            <mat-icon
+                    [class.avatar]="!functions.empty(diffusion.picture)"
+                    [class.fa-user-friends]="!functions.empty(diffusion.process_date) && diffusion.delegatedBy !== null"
+                    [class.fa-user-slash]="!diffusion.isValid"
+                    [class.fa-user]="functions.empty(diffusion.picture) && (diffusion.isValid || (diffusion.process_date === null && diffusion.delegatedBy === null))"
+                    [class.invalid]="!diffusion.hasPrivilege || !diffusion.isValid"
+                    [style.background-image]="!functions.empty(diffusion.picture) ? 'url('+diffusion.picture+')' : ''"
+                    [title]="!diffusion.isValid ? ('lang.userNotValid' | translate) : ''"
+                    class="fa fa-2x"
+                    color="primary"
+                    mat-list-icon
+                    style="position: relative;">
+            </mat-icon>
+            <ng-container *ngIf="(!adminMode || !functions.empty(diffusion.process_date)) && diffusion.isValid">
+                <mat-icon
+                        [class.fa-hand-paper]="!functions.empty(diffusion.process_date) && diffusion.status === 'STOP'"
+                        [class.fa-hourglass]="functions.empty(diffusion.process_date) && diffusion.status !== 'END'"
+                        [class.fa-thumbs-down]="!functions.empty(diffusion.process_date) && diffusion.status === 'REF'"
+                        [class.fa-thumbs-up]="!functions.empty(diffusion.process_date) && diffusion.status === 'VAL'"
+                        [class.fa-times]="diffusion.status === 'END'"
+                        [class.invalid]="(!functions.empty(diffusion.process_date) && diffusion.status !== 'VAL') || diffusion.status === 'END'"
+                        [class.valid]="!functions.empty(diffusion.process_date) && diffusion.status === 'VAL'"
+                        [title]="getStatusTitle(diffusion)"
+                        class="fa-2x fa"
+                        mat-list-icon
+                        style="opacity:0.5;"></mat-icon>
+            </ng-container>
+            <div class="workflowLine" mat-line>
+                <div class="workflowLineContainer">
+                    <span>
+                        <div
+                                [class.unauthorized]="!diffusion.hasPrivilege || !diffusion.isValid"
+                                [title]="diffusion.labelToDisplay"
+                                class="workflowLineLabel"
+                                style="white-space: initial">
+                            {{ diffusion.labelToDisplay }}
+                            <ng-container
+                                    *ngIf="!functions.empty(diffusion.process_date) && diffusion.delegatedBy !== null">
+                                <mat-icon [title]="('lang.insteadOf' | translate) + ' ' + diffusion.delegatedBy"
+                                          class="fas fa-exclamation-circle"
+                                          mat-list-icon
+                                          style="opacity:0.5;font-size: 125%;height: 15px;color: red;cursor: help;"></mat-icon>
+                            </ng-container>
+                        </div>
+                        <mat-form-field *ngIf="externalSignatoryBookManagerService.canAddSteps() && adminMode"
+                                        style="width: 140px !important;">
+                                <mat-label>{{ 'lang.step' | translate }}</mat-label>
+                                <input (input)="sanitizeStep($event, diffusion)"
+                                       (ngModelChange)="onStepChange($event, diffusion)"
+                                       [(ngModel)]="diffusion.step"
+                                       [attr.aria-invalid]="diffusion.step >= 1 && diffusion.step <= visaWorkflow.items.length"
+                                       [attr.aria-labelledby]="'step-label'"
+                                       [attr.aria-required]="true"
+                                       [disabled]="visaWorkflow.items.length === 1"
+                                       [max]="getStepMax()"
+                                       [min]="1"
+                                       [placeholder]="'lang.step' | translate"
+                                       [value]="diffusion.step"
+                                       matInput
+                                       name="step"
+                                       type="number"
+                                >
+                        </mat-form-field>
+                    </span>
+                    <div *ngIf="!functions.empty(diffusion.process_date) && diffusion.status === 'VAL' && externalSignatoryBookManagerService.isMappingWithTechnicalStatus()"
+                         class="workflowLineProcessDate" color="accent" title='{{diffusion.process_date | fullDate}}'>
+                        {{ diffusion.requested_signature ? ('lang.signedUserDate' | translate) : ('lang.approvedUserDate' | translate) }} {{ diffusion.process_date | timeAgo : 'full' }}
+                    </div>
+                    <div *ngIf="!functions.empty(diffusion.process_date) && diffusion.status !== 'VAL' && externalSignatoryBookManagerService.isMappingWithTechnicalStatus()"
+                         class="workflowLineProcessDate" color="warn" title='{{diffusion.process_date | fullDate}}'>
+                        {{ diffusion.status === 'STOP' ? ('lang.interrupted' | translate) : ('lang.refused' | translate) }} {{ diffusion.process_date | timeAgo : 'full' }}
+                    </div>
+                    <div *ngIf="functions.empty(diffusion.process_date) && this.getLastVisaUser()?.status === 'REF' && externalSignatoryBookManagerService.isMappingWithTechnicalStatus()"
+                         class="workflowLineProcessDate" color="warn"
+                         title='{{this.getLastVisaUser()?.process_date | fullDate}}'>
+                        {{ 'lang.interrupted' | translate }} {{ this.getLastVisaUser()?.process_date | timeAgo : 'full' }}
+                    </div>
+                    <ng-container
+                            *ngIf="!adminMode && !externalSignatoryBookManagerService.isMappingWithTechnicalStatus()">
+                        <div [class.refused-status]="diffusion.status === 'REF'"
+                             [class.signed-status]="diffusion.status === 'VAL'"
+                             [title]="formatStatusWithProcessDate(diffusion)"
+                             class="workflowLineProcessDate"
+                             color="primary">
+                            {{ formatStatusWithProcessDate(diffusion) }}
+                        </div>
+                    </ng-container>
+                </div>
+                <div *ngIf="diffusion.hasPrivilege && diffusion.isValid">
+                    <ng-container>
+                        <button (click)="openCreateUserOtp(diffusion)"
+                                *ngIf="canManageUser() && diffusion.item_id === null && diffusion?.externalInformations && canAddExternalUser()"
+                                [title]="'lang.updateOtp' | translate" mat-icon-button>
+                            <mat-icon class="fas fa-edit" color="primary"></mat-icon>
+                        </button>
+                        <button (click)="onSignatureRequiredChange(diffusion)"
+                                *ngIf="externalSignatoryBookManagerService.canAddSteps() && canManageUser()"
+                                [disabled]="signatureRequiredForStep(diffusion) || !functions.empty(diffusion.process_date)"
+                                [title]="(diffusion.isSignatureRequired ? 'lang.signatoryRequired' : 'lang.noSignatoryRequired') | translate"
+                                [value]="diffusion.isSignatureRequired"
+                                class="signature-requirement-btn"
+                                mat-icon-button
+                                name="isSignatureRequired"
+                        >
+                            <mat-icon [class.signature-required]="diffusion.isSignatureRequired"
+                                      class="fas fa-pen-nib"
+                                      style="color: #00000070">
+                            </mat-icon>
+                        </button>
+                        <button [class.readonly]="!adminMode" [color]="diffusion.role === 'visa' ? 'default':'primary'"
+                                [disabled]="!adminMode" [matMenuTriggerFor]="rolesMenu"
+                                class="currentRoleButton"
+                                mat-raised-button
+                                title="{{'lang.' + diffusion.role + (diffusion.role === 'sign' ? 'User' : '') | translate}}">{{ 'lang.' + diffusion.role + (diffusion.role === 'sign' ? 'User' : '') | translate }}
+                        </button>
+                        <mat-menu #rolesMenu="matMenu">
+                            <ng-container *ngFor="let role of diffusion.availableRoles">
+                                <button (click)="diffusion.role = role; workflowUpdated.emit(visaWorkflow.items)"
+                                        [class.selected]="diffusion.role===role"
+                                        [disabled]="!isValidRole(i,role,diffusion.role)"
+                                        mat-menu-item>{{ 'lang.' + role + (role === 'sign' ? 'User' : '') | translate }}
+                                </button>
+                            </ng-container>
+                        </mat-menu>
+                    </ng-container>
+                </div>
+                <div *ngIf="!diffusion.hasPrivilege" class="invalid">
+                    {{ 'lang.noPrivileges' | translate }}
+                </div>
+                <div *ngIf="!diffusion.isValid" class="invalid invalidMsg">
+                    {{ 'lang.userNotValid' | translate }}
+                </div>
+            </div>
+            <button (click)="deleteItem(i)" *ngIf="canManageUser()" mat-icon-button>
+                <mat-icon class="fa fa-times" color="warn"></mat-icon>
+            </button>
+        </mat-list-item>
+    </div>
+</mat-list>

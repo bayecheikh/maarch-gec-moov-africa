@@ -1,0 +1,403 @@
+<div
+        *ngIf="loading"
+        [attr.aria-live]="'polite'"
+        role="status"
+        style="display:flex;height:100%;">
+    <mat-spinner [attr.aria-label]="'lang.loading' | translate" style="margin:auto;"></mat-spinner>
+</div>
+<ng-container *ngIf="!loading">
+    <div *ngIf="!adminMode && mode === 'indexation'"
+         class="tracking-mail-container">
+        <button (click)="toggleMailTracking()"
+                [attr.aria-label]="arrFormControl['mail­tracking'].value ? ('lang.untrackThisMail' | translate) : ('lang.trackThisMail' | translate)"
+                [title]="arrFormControl['mail­tracking'].value ? ('lang.untrackThisMail' | translate) : ('lang.trackThisMail' | translate)"
+                class="categoryLabel"
+                mat-button>
+            {{ arrFormControl['mail­tracking'].value ? ('lang.untrackThisMail' | translate) : ('lang.trackThisMail' | translate) }}
+            <mat-icon
+                    aria-hidden="true"
+                    class="{{this.arrFormControl['mail­tracking'].value ? 'fas':'far'}} fa-star"
+                    color="primary"
+                    style="font-size: 20px;">
+            </mat-icon>
+        </button>
+    </div>
+    <ng-container *ngFor="let category of fieldCategories">
+        <div *ngIf="this['indexingModels_'+category].length > 0 || adminMode" [style.borderColor]="currentPriorityColor"
+             class="banner">
+            <div [style.color]="currentPriorityColor" [title]="'lang.' + category| translate" class="title">
+                {{ 'lang.' + category| translate | uppercase }} <small *ngIf="category === 'mail'"
+                                                                       [title]="'lang.category_id' | translate">{{ 'lang.indexing_' + currentCategory | translate | titlecase }}</small>
+                <div aria-hidden="true" class="title-divider"></div>
+            </div>
+            <div class="content" role="group">
+                <div (cdkDropListDropped)="drop($event)"
+                     [attr.aria-label]="'indexingModelsCustomFieldsList_' + category"
+                     [cdkDropListConnectedTo]="['indexingModelsCustomFieldsList_mail','indexingModelsCustomFieldsList_contact','indexingModelsCustomFieldsList_process','indexingModelsCustomFieldsList_classifying','customFieldsList','fieldsList']"
+                     [cdkDropListData]="this['indexingModels_'+category]" [cdkDropListDisabled]="!adminMode"
+                     cdkDropList
+                     class="indexingModelsCustomFieldsList" id="indexingModelsCustomFieldsList_{{category}}"
+                     style="min-height: 50px;">
+                    <ng-container *ngFor="let field of this['indexingModels_'+category];let i=index">
+                        <div *ngIf="field.unit === category" [cdkDragData]="field" cdkDrag cdkDragLockAxis="y"
+                             class="fieldRow">
+                            <div *ngIf="(!adminMode && !appService.getViewMode()) || adminMode" class="fieldLabel">
+                                <mat-icon *ngIf="adminMode" [title]="'lang.move' | translate"
+                                          aria-hidden="true" cdkDragHandle class="fas fa-bars fa-2x" color="primary"
+                                          style="cursor: move"></mat-icon>&nbsp;
+                                {{ field.label }}
+                                <button *ngIf="adminMode"
+                                        [attr.aria-expanded]="false" [attr.aria-haspopup]="'menu'"
+                                        [matMenuTriggerFor]="fieldActions"
+                                        mat-icon-button>
+                                    <mat-icon aria-hidden="true" class="fa fa-ellipsis-v" color="secondary"></mat-icon>
+                                </button>
+                                <mat-menu #fieldActions="matMenu" [class]="'parametersFieldsMenu'" role="menu">
+                                    <button (click)="field.mandatory = !field.mandatory" *ngIf="!field.system"
+                                            [attr.aria-required]="field.mandatory"
+                                            [title]="!field.mandatory ? 'lang.mandatoryField' : 'lang.optionalField' | translate"
+                                            mat-menu-item
+                                            role="menuitem">
+                                        <span *ngIf="!field.mandatory">{{ 'lang.mandatoryField' | translate }}</span>
+                                        <span *ngIf="field.mandatory">{{ 'lang.optionalField' | translate }}</span>
+                                    </button>
+                                    <mat-divider *ngIf="!field.system" aria-hidden="true"></mat-divider>
+                                    <button (click)="enableField(field, true)" *ngIf="!field.enabled"
+                                            [title]="'lang.enableField' | translate"
+                                            mat-menu-item role="menuitem">
+                                        <span>{{ 'lang.enableField' | translate }}</span>
+                                    </button>
+                                    <button (click)="enableField(field, false)" *ngIf="field.enabled"
+                                            [title]="'lang.disableField' | translate"
+                                            mat-menu-item role="menuitem">
+                                        <span>{{ 'lang.disableField' | translate }}</span>
+                                    </button>
+                                    <button (click)="openValuesSelector(field)"
+                                            *ngIf="!field.SQLMode && field.identifier === 'doctype'"
+                                            [title]="'lang.chooseValues' | translate" mat-menu-item role="menuitem">
+                                        <span>{{ 'lang.chooseValues' | translate }}</span>
+                                    </button>
+                                    <mat-divider *ngIf="!field.system" aria-hidden="true"></mat-divider>
+                                    <button (click)="removeItem('indexingModels_'+category,field,i)" *ngIf="!field.system && field.identifier.indexOf('registeredMail_') === -1 && ((currentCategory === 'registeredMail' && field.identifier !== 'departureDate') ||
+                                            currentCategory !== 'registeredMail')"
+                                            [title]="'lang.delete' | translate" mat-menu-item role="menuitem">
+                                        <mat-icon aria-hidden="true" class="fa fa-trash" color="warn"></mat-icon>
+                                        <span>{{ 'lang.delete' | translate }}</span>
+                                    </button>
+                                </mat-menu>
+                            </div>
+                            <div [class.checkboxInput]="field.type === 'checkbox'"
+                                 [class.textareaInput]="field.type === 'string'"
+                                 class="fieldInput">
+                                <ng-container *ngIf="field.type === 'string'">
+                                    <button *ngIf="field.SQLMode && adminMode"
+                                            [title]="'lang.bddModeCustomFieldMsg' | translate" color="primary" disabled
+                                            mat-button mat-icon-button matPrefix
+                                            style="position: absolute;left: -40px;">
+                                        <mat-icon aria-hidden="true" class="fas fa-database" color="primary"></mat-icon>
+                                    </button>
+                                    <mat-form-field [floatLabel]="appService.getViewMode() ? '' : 'never'"
+                                                    class="input-form">
+                                        <mat-label *ngIf="appService.getViewMode()"
+                                                   [title]="field.label">{{ field.label }}
+                                        </mat-label>
+                                        <textarea [attr.aria-required]="field.mandatory"
+                                                  [formControl]="arrFormControl[field.identifier]"
+                                                  [id]="field.identifier"
+                                                  [placeholder]="!adminMode ? ('lang.typeValue' | translate) : ('lang.defaultValue' | translate)"
+                                                  cdkTextareaAutosize
+                                                  class="subject"
+                                                  matInput></textarea>
+                                    </mat-form-field>
+                                </ng-container>
+                                <ng-container *ngIf="field.type === 'integer'">
+                                    <button *ngIf="field.SQLMode && adminMode"
+                                            [title]="'lang.bddModeCustomFieldMsg' | translate" color="primary" disabled
+                                            mat-button mat-icon-button matPrefix
+                                            style="position: absolute;left: -40px;">
+                                        <mat-icon aria-hidden="true" class="fas fa-database" color="primary"></mat-icon>
+                                    </button>
+                                    <mat-form-field [floatLabel]="appService.getViewMode() ? '' : 'never'"
+                                                    class="input-form">
+                                        <mat-label *ngIf="appService.getViewMode()"
+                                                   [title]="field.label">{{ field.label }}
+                                        </mat-label>
+                                        <input [formControl]="arrFormControl[field.identifier]" [id]="field.identifier"
+                                               [placeholder]="!adminMode ? ('lang.typeValue' | translate) : ('lang.defaultValue' | translate)"
+                                               matInput
+                                               min="0"
+                                               step="0.1" type="number">
+                                    </mat-form-field>
+                                </ng-container>
+                                <ng-container *ngIf="field.type === 'select'">
+                                    <button *ngIf="field.SQLMode && adminMode"
+                                            [title]="'lang.bddModeCustomFieldMsg' | translate" color="primary" disabled
+                                            mat-button mat-icon-button matPrefix
+                                            style="position: absolute;left: -40px;">
+                                        <mat-icon aria-hidden="true" class="fas fa-database" color="primary">
+                                        </mat-icon>
+                                    </button>
+                                    <app-plugin-select-search
+                                            (afterSelected)="launchEvent($event, field)"
+                                            [attr.aria-required]="field.mandatory"
+                                            [datas]="field.values"
+                                            [formControlSelect]="arrFormControl[field.identifier]"
+                                            [id]="field.identifier"
+                                            [label]="field.label"
+                                            [placeholderLabel]="!adminMode ? ('lang.chooseValue' | translate) : ('lang.defaultValue' | translate)"
+                                            [showResetOption]="adminMode || !field.mandatory"
+                                            style="width:100%;">
+                                    </app-plugin-select-search>
+                                </ng-container>
+                                <ng-container *ngIf="field.type === 'date'">
+                                    <button *ngIf="field.SQLMode && adminMode"
+                                            [title]="'lang.bddModeCustomFieldMsg' | translate" color="primary" disabled
+                                            mat-button mat-icon-button matPrefix
+                                            style="position: absolute;left: -40px;">
+                                        <mat-icon aria-hidden="true" class="fas fa-database" color="primary">
+                                        </mat-icon>
+                                    </button>
+                                    <button (click)="$event.stopPropagation();toggleTodayDate(field);"
+                                            *ngIf="adminMode && !field.SQLMode && field.identifier !== 'processLimitDate' && (!arrFormControl[field.identifier].disabled || field.today)"
+                                            [matTooltip]="'lang.todayDate' | translate"
+                                            color="primary"
+                                            mat-button mat-icon-button
+                                            matPrefix
+                                            style="position: absolute;left: -40px;">
+                                        <mat-icon aria-hidden="true"
+                                                  class="{{field.today ? 'far fa-bell-slash' : 'far fa-bell'}}"
+                                                  color="primary">
+                                        </mat-icon>
+                                    </button>
+                                    <button *ngIf="adminMode && !field.SQLMode && field.identifier === 'processLimitDate'"
+                                            [matTooltip]="'lang.processLimitDatetoggleDisableDesc' | translate"
+                                            color="primary" mat-icon-button
+                                            matPrefix
+                                            style="position: absolute;left: -40px; cursor: help;">
+                                        <mat-icon aria-hidden="true" class="fas fa-circle-info"></mat-icon>
+                                    </button>
+                                    <mat-form-field (click)="picker.open()"
+                                                    [floatLabel]="appService.getViewMode() ? '' : 'never'"
+                                                    class="input-form input-date"
+                                                    style="cursor:pointer;">
+                                        <mat-label *ngIf="appService.getViewMode()"
+                                                   [title]="field.label">{{ field.label }}
+                                        </mat-label>
+                                        <input (dateChange)="launchEvent($event, field)"
+                                               [formControl]="arrFormControl[field.identifier]"
+                                               [id]="field.identifier" [matDatepicker]="picker"
+                                               [max]="getMaxDate(field.endDate)"
+                                               [min]="getMinDate(field.startDate)"
+                                               [placeholder]="!adminMode ? ('lang.chooseDate' | translate) : ('lang.defaultValue' | translate)"
+                                               matInput readonly
+                                               style="cursor:pointer;">
+                                        <mat-datepicker-toggle
+                                                *ngIf="!arrFormControl[field.identifier].value"
+                                                [for]="picker"
+                                                matSuffix>
+                                        </mat-datepicker-toggle>
+                                        <mat-datepicker #picker [touchUi]="appService.getViewMode()"></mat-datepicker>
+                                        <button (click)="$event.stopPropagation();arrFormControl[field.identifier].reset();"
+                                                *ngIf="arrFormControl[field.identifier].value && !arrFormControl[field.identifier].disabled"
+                                                [title]="'lang.eraseValue' | translate" color="warn"
+                                                mat-button
+                                                mat-icon-button
+                                                matSuffix>
+                                            <mat-icon aria-hidden="true" class="fa fa-calendar-times" color="warn">
+                                            </mat-icon>
+                                        </button>
+                                    </mat-form-field>
+                                </ng-container>
+                                <ng-container *ngIf="field.type === 'radio'">
+                                    <button *ngIf="field.SQLMode && adminMode"
+                                            [title]="'lang.bddModeCustomFieldMsg' | translate" color="primary" disabled
+                                            mat-button mat-icon-button matPrefix
+                                            style="position: absolute;left: -40px;">
+                                        <mat-icon aria-hidden="true" class="fas fa-database" color="primary">
+                                        </mat-icon>
+                                    </button>
+                                    <mat-form-field [floatLabel]="appService.getViewMode() ? '' : 'never'"
+                                                    class="input-form input-radio">
+                                        <mat-label *ngIf="appService.getViewMode()">{{ field.label }}</mat-label>
+                                        <input matInput style="display: none;">
+                                        <mat-radio-group [attr.aria-required]="field.mandatory"
+                                                         [formControl]="arrFormControl[field.identifier]"
+                                                         class="radio-form"
+                                                         color="primary">
+                                            <mat-radio-button
+                                                    *ngFor="let value of field.values"
+                                                    [attr.aria-label]="value.label"
+                                                    [disabled]="value.disabled"
+                                                    [value]="value.id">
+                                                {{ value.label }}
+                                            </mat-radio-button>
+                                        </mat-radio-group>
+                                    </mat-form-field>
+                                </ng-container>
+                                <ng-container *ngIf="field.type === 'checkbox'">
+                                    <button *ngIf="field.SQLMode && adminMode"
+                                            [title]="'lang.bddModeCustomFieldMsg' | translate" color="primary" disabled
+                                            mat-button mat-icon-button matPrefix
+                                            style="position: absolute;left: -40px;">
+                                        <mat-icon aria-hidden="true" class="fas fa-database" color="primary"></mat-icon>
+                                    </button>
+                                    <div class="input-form checkbox-form">
+                                        <mat-selection-list
+                                            #shoes
+                                            [attr.aria-required]="field.mandatory"
+                                            [formControl]="arrFormControl[field.identifier]"
+                                            class="div-list">
+                                            <mat-list-option *ngFor="let value of field.values" [value]="value.id"
+                                                             checkboxPosition="before" color="primary">
+                                                {{ value.label }}
+                                            </mat-list-option>
+                                        </mat-selection-list>
+                                    </div>
+                                    <mat-chip-list
+                                            [disabled]="field.system && adminMode"
+                                            class="checkbox-selected-list">
+                                        <mat-chip *ngFor="let chip of shoes.selectedOptions.selected"
+                                                  [title]="getCheckboxListLabel(chip.value, field.values)"
+                                                  selected>
+                                            {{ getCheckboxListLabel(chip.value, field.values) }}
+                                        </mat-chip>
+                                    </mat-chip-list>
+                                </ng-container>
+                                <!--<ng-container *ngIf="field.type === 'autocomplete'">
+                                    <app-plugin-autocomplete [labelPlaceholder]="'lang.searchValue' | translate"
+                                        [routeDatas]="[field.values[0]]" [targetSearchKey]="'idToDisplay'"
+                                        [size]="'small'" [control]="arrFormControl[field.identifier]"
+                                        [manageDatas]="!adminMode ? field.values[1] : undefined" style="width:100%;">
+                                    </app-plugin-autocomplete>
+                                </ng-container>-->
+                                <ng-container *ngIf="['senders','recipients'].indexOf(field.identifier) > -1">
+                                    <app-contact-autocomplete
+                                        #appContactAutocomplete
+                                        (afterContactSelected)="selectedContact($event, field.identifier)"
+                                        (removeContactEvent)="checkRemovedItem($event)"
+                                        (retrieveDocumentEvent)="retrieveDocumentEvent.emit()"
+                                        [controlAutocomplete]="arrFormControl[field.identifier]"
+                                        [id]="field.identifier"
+                                        style="width:100%;">
+                                    </app-contact-autocomplete>
+                                </ng-container>
+                                <ng-container *ngIf="field.identifier === 'folders'">
+                                    <app-folder-input [control]="arrFormControl[field.identifier]" style="width:100%;">
+                                    </app-folder-input>
+                                </ng-container>
+                                <ng-container *ngIf="field.identifier === 'tags'">
+                                    <app-tag-input [control]="arrFormControl[field.identifier]" style="width:100%;">
+                                    </app-tag-input>
+                                </ng-container>
+                                <ng-container *ngIf="field.type === 'banAutocomplete'">
+                                    <app-address-ban-input
+                                            [adminMode]="adminMode"
+                                            [controlAutocomplete]="arrFormControl[field.identifier]"
+                                            style="width:100%;">
+                                    </app-address-ban-input>
+                                </ng-container>
+                                <ng-container *ngIf="field.type === 'contact'">
+                                    <app-contact-autocomplete
+                                            (retrieveDocumentEvent)="retrieveDocumentEvent.emit()"
+                                            [controlAutocomplete]="arrFormControl[field.identifier]"
+                                            [id]="field.identifier"
+                                            style="width:100%;">
+                                    </app-contact-autocomplete>
+                                </ng-container>
+                                <ng-container *ngIf="field.identifier === 'registeredMail_issuingSite'">
+                                    <app-issuing-site-input
+                                        #appIssuingSiteInput
+                                        (afterSelected)="launchEvent($event, field)"
+                                        [control]="arrFormControl[field.identifier]"
+                                        [registedMailType]="arrFormControl['registeredMail_type'].value"
+                                        [showResetOption]="adminMode || !field.mandatory"
+                                        style="width:100%;">
+                                    </app-issuing-site-input>
+                                </ng-container>
+                                <ng-container *ngIf="field.identifier === 'registeredMail_recipient'">
+                                    <app-contact-autocomplete
+                                            (retrieveDocumentEvent)="retrieveDocumentEvent.emit()"
+                                            *ngIf="mode === 'indexation'"
+                                            [controlAutocomplete]="arrFormControl[field.identifier]"
+                                            [exclusion]="'?noUsers=true&noEntities=true&noContactsGroups=true'"
+                                            [id]="field.identifier"
+                                            [singleMode]="true"
+                                            style="width:100%;">
+                                    </app-contact-autocomplete>
+
+                                    <app-registered-mail-recipient-input
+                                        #appRegisteredMailRecipientInput
+                                        *ngIf="mode !== 'indexation'"
+                                        [control]="arrFormControl[field.identifier]"
+                                        [registeredMailType]="arrFormControl['registeredMail_type'].value"
+                                        style="width:100%;">
+                                    </app-registered-mail-recipient-input>
+                                </ng-container>
+                            </div>
+                            <div class="fieldState">
+                                <mat-icon
+                                        *ngIf="adminMode || (arrFormControl[field.identifier].hasError('required') && arrFormControl[field.identifier].untouched)"
+                                        [class.noMandatory]="!field.mandatory" aria-hidden="true"
+                                        class="fas fa-asterisk fieldRequired"></mat-icon>
+                                <mat-icon
+                                        *ngIf="!adminMode && arrFormControl[field.identifier].touched && arrFormControl[field.identifier].hasError('required')"
+                                        aria-hidden="true" class="fas fa-exclamation-triangle fieldError"></mat-icon>
+                                <mat-icon
+                                        *ngIf="!adminMode && arrFormControl[field.identifier].valid && !isEmptyField(field)"
+                                        aria-hidden="true" class="fas fa-check fieldFull"></mat-icon>
+                            </div>
+                        </div>
+                        <div *ngIf="hasLinkedRes && field.identifier === 'senders'" [title]="msgToDisplay"
+                             class="linkRes" role="region">
+                            {{ msgToDisplay }}
+                            <ng-container><a
+                                    (click)="openSearchResourceModal()" [attr.aria-label]="'lang.seeMore' | translate"
+                                    style="cursor: pointer; display: contents; font-weight: bold; font-size: 14px;">{{ 'lang.seeMore' | translate }}</a>
+                            </ng-container>
+                        </div>
+                        <div
+                                *ngIf="field.identifier === 'destination' && !adminMode && arrFormControl['destination'].value > 0 && !hideDiffusionList">
+                            <mat-divider></mat-divider>
+                            <div class="diffusion-list-container" role="region">
+                                <div style="display: flex;flex: 1;align-items: center;">
+                                    {{ 'lang.diffusionList' | translate }}
+                                    <button (click)="appDiffusionsList.switchMode()"
+                                            *ngIf="appDiffusionsList.canUpdateRoles() && canEdit && mode !== 'process' && field.enabled"
+                                            [title]="'lang.modifyDiffusionList' | translate" color="primary"
+                                            mat-icon-button>
+                                        <mat-icon class="fa fa-edit"></mat-icon>
+                                    </button>
+                                </div>
+                                <div class="fieldState" style="width: 20px;padding: 0;">
+                                    <mat-icon
+                                            *ngIf="adminMode || (arrFormControl['diffusionList'].hasError('required') && arrFormControl['diffusionList'].untouched)"
+                                            [class.noMandatory]="!field.mandatory" aria-hidden="true"
+                                            class="fas fa-asterisk fieldRequired"></mat-icon>
+                                    <mat-icon
+                                            *ngIf="!adminMode && arrFormControl['diffusionList'].touched && arrFormControl['diffusionList'].status === 'INVALID'"
+                                            aria-hidden="true"
+                                            class="fas fa-exclamation-triangle fieldError"></mat-icon>
+                                    <mat-icon
+                                            *ngIf="!adminMode && arrFormControl['diffusionList'].valid && !isEmptyField(field)"
+                                            aria-hidden="true" class="fas fa-check fieldFull"></mat-icon>
+                                </div>
+                            </div>
+                            <app-diffusions-list
+                                #appDiffusionsList
+                                (triggerEvent)="changeDestination($event)"
+                                [allowedEntities]="field.allowedEntities"
+                                [category]="currentCategory"
+                                [customDiffusion]="customDiffusion"
+                                [diffFormControl]="arrFormControl['diffusionList']"
+                                [entityId]="arrFormControl[field.identifier].value" [resId]="resId"
+                                [selfDest]="selfDest"
+                                [target]="'indexation'">
+                            </app-diffusions-list>
+                            <mat-divider></mat-divider>
+                        </div>
+                    </ng-container>
+                </div>
+            </div>
+        </div>
+    </ng-container>
+</ng-container>

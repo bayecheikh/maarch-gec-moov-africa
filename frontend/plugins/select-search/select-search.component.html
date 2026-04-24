@@ -1,0 +1,67 @@
+<mat-form-field [appearance]="appearance" [class]="class + ' search-select'"
+                [floatLabel]="appService.getViewMode() || showLabel ? '' : 'never'">
+    <mat-label *ngIf="appService.getViewMode() || showLabel" [title]="label">{{ label }}</mat-label>
+    <mat-select #test (selectionChange)="launchEvent($event)" [disabled]="disabled" [formControl]="formControlSelect"
+                [id]="id" [multiple]="multiple" [placeholder]="placeholderLabel"
+                [required]="required"
+                [title]="functions.empty(formControlSelect.value) ? '' : getLabel(formControlSelect.value)"
+                [attr.aria-label]="functions.empty(formControlSelect.value) ? '' : getLabel(formControlSelect.value)">
+        <mat-select-trigger *ngIf="multiple">
+            {{ formControlSelect.value.length > 0 ? getFirstDataLabel() : '' }}
+            <span *ngIf="formControlSelect.value?.length > 1" class="multipleLabels">
+              (+{{ formControlSelect.value.length - 1 }} {{ 'lang.others' | translate | lowercase }})
+            </span>
+        </mat-select-trigger>
+        <input *ngIf="datas.length > 5" class="mat-select-search-input mat-select-search-hidden" matInput/>
+
+        <div *ngIf="datas.length > 5" [ngClass]="{'mat-select-search-inner-multiple': matSelect.multiple}"
+             class="mat-select-search-inner">
+            <input #searchSelectInput (blur)="onBlur($event.target.value)" (input)="onInputChange($event.target.value)"
+                   (keydown)="_handleKeydown($event)" [formControl]="formControlSearch"
+                   [placeholder]="'lang.filterBy' | translate"
+                   class="mat-select-search-input" id="searchSelectInput"/>
+            <button (click)="_reset()" *ngIf="formControlSearch.value" aria-label="Clear"
+                    class="mat-select-search-clear" mat-button
+                    mat-icon-button>
+                <mat-icon aria-hidden="true" class="fa fa-times"></mat-icon>
+            </button>
+            <button (click)="formControlSearch.setValue('__SELECTED')"
+                    *ngIf="functions.empty(formControlSearch.value) && multiple"
+                    [disabled]="formControlSelect.value.length === 0"
+                    [title]="'lang.displaySelectedValues' | translate" class="mat-select-search-clear"
+                    color="primary" mat-icon-button>
+                <mat-icon aria-hidden="true" class="fas fa-check-double"></mat-icon>
+            </button>
+        </div>
+
+        <div *ngIf="value && _options?.length === 0 && datas.length > 5" class="mat-select-search-no-entries-found">
+            {{ 'lang.noResult' | translate }}
+        </div>
+        <mat-option
+                    (onSelectionChange)="selectChange($event)"
+                    *ngIf="showResetOption" [value]="emptyData()">
+            ({{ 'lang.emptyValue' | translate }})
+        </mat-option>
+        <mat-option
+                (onSelectionChange)="selectChange($event)"
+                *ngFor="let value of filteredDatas | async; let i = index"
+                [class.fixPos]="value.isTitle && datas.length > 5"
+                [class.opt-group]="value.isTitle"
+                [disabled]="value.disabled"
+                [style.color]="value.color"
+                [title]="value.title !== undefined ? value.title : value.label"
+                [attr.aria-label]="value.title !== undefined ? value.title : value.label"
+                [value]="returnValue === 'id' ? value.id : value"
+                tabindex="0"
+        >
+            <span [innerHTML]="value.label"></span>
+        </mat-option>
+    </mat-select>
+    <mat-error *ngIf="formControlSelect.status!=='VALID' && formControlSelect.touched && !hideErrorDesc">
+        {{ getErrorMsg(formControlSelect.errors) }}
+    </mat-error>
+    <mat-icon *ngIf="suffixIcon !== null" [style.color]="suffixIcon.color" [title]="suffixIcon.title !== undefined ? suffixIcon.title : ''"
+              aria-hidden="true" class="fas fa-circle selectSuffixIcon"
+              matSuffix style="height: auto;">
+    </mat-icon>
+</mat-form-field>

@@ -1,0 +1,53 @@
+<div class="mat-dialog-content-container lang-container">
+  <h1 mat-dialog-title>{{ 'lang.languageVerification' | translate}}</h1>
+  <div mat-dialog-content>
+    <div *ngIf="loading" class="loading">
+      <mat-spinner style="margin:auto;"></mat-spinner>
+    </div>
+    <mat-tab-group *ngIf="!loading" (selectedTabChange)="setActiveLang($event)">
+      <ng-container *ngFor="let langName of allLang | keyvalue">
+        <mat-tab [label]="langName.key" *ngIf="langName.key !== 'fr'">
+          <ng-template mat-tab-label>
+            {{langName.key}}&nbsp;<p [matBadge]="missingLang[langName.key].length">&nbsp;</p>
+          </ng-template>
+          <div style="display: grid;">
+            <ng-container *ngFor="let lang of missingLang[langName.key]">
+              <mat-form-field appearance="fill">
+                <mat-label>{{lang.id}}</mat-label>
+                <input matInput #varLangInput [(ngModel)]="lang.value" [title]="lang.value">
+                <button mat-button color="primary" matSuffix mat-icon-button
+                  [title]="'lang.openTranslation' | translate"
+                  [disabled]="lang.value === ''"
+                  (click)="varLangInput.select(); openTranslation(lang.value)">
+                  <mat-icon class="fas fa-language"></mat-icon>
+                </button>
+              </mat-form-field>
+            </ng-container>
+          </div>
+        </mat-tab>
+      </ng-container>
+    </mat-tab-group>
+  </div>
+  <span class="divider-modal"></span>
+  <div mat-dialog-actions>
+    <button mat-raised-button
+      [disabled]="loading"
+      class="actions"
+      color="primary"
+      (click)="generateMissingLang(false)">
+      {{ 'lang.generateLanVariables' | translate}}
+    </button>
+    <button mat-raised-button
+      [disabled]="loading"
+      class="actions"
+      color="primary"
+      (click)="generateMissingLang(true)">
+      {{ 'lang.generateLanVariablesIgnoreTranslate' | translate}}
+    </button>
+    <button mat-raised-button
+      class="actions"
+      color="" mat-dialog-close cdkFocusInitial>
+      {{ 'lang.close' | translate }}
+    </button>
+  </div>
+</div>

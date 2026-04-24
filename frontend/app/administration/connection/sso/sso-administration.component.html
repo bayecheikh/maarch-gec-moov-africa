@@ -1,0 +1,84 @@
+<mat-sidenav-container autosize class="maarch-container">
+    <ng-template #adminMenuTemplate>
+        <mat-nav-list>
+            <a mat-list-item *ngFor="let menu of adminService.getAdminConnectionsSubMenus()"
+               [class.active]="menu.current" [routerLink]="menu.route">
+                <mat-icon color="primary" mat-list-icon [class]="menu.icon"></mat-icon>
+                <p mat-line>
+                    {{ menu.label }}
+                </p>
+            </a>
+        </mat-nav-list>
+    </ng-template>
+    <mat-sidenav-content>
+        <div class="bg-head">
+            <div class="bg-head-title" [class.customContainerRight]="appService.getViewMode()">
+                <div class="bg-head-title-label">
+                    <app-header-left></app-header-left>
+                </div>
+                <div class="bg-head-title-tool">
+                    <app-header-right></app-header-right>
+                </div>
+            </div>
+            <div class="bg-head-content" [class.fullContainer]="appService.getViewMode()">
+            </div>
+        </div>
+        <div class="container" [class.fullContainer]="appService.getViewMode()">
+            <div class="container-content">
+                <div *ngIf="loading" style="display:flex;height:100%;">
+                    <mat-spinner style="margin:auto;"></mat-spinner>
+                </div>
+                <mat-card *ngIf="!loading" class="card-app-content">
+                    <form style="display: contents;" (ngSubmit)="onSubmit()" #ssoForm="ngForm">
+                        <mat-form-field appearance="outline">
+                            <mat-label>{{ 'lang.ssoUrl' | translate }}</mat-label>
+                            <input matInput name="ssoUrl"
+                                   [(ngModel)]="sso.url"
+                                   [value]="sso.url">
+                            <mat-hint>{{ 'lang.ssoUrlDesc' | translate }}</mat-hint>
+                        </mat-form-field>
+                        <mat-form-field appearance="outline">
+                            <mat-label>{{ 'lang.ssoLogoutUrl' | translate }}</mat-label>
+                            <input matInput name="ssoLogoutUrl"
+                                   [(ngModel)]="sso.ssoLogoutUrl"
+                                   [value]="sso.ssoLogoutUrl">
+                            <mat-hint>{{ 'lang.ssoLogoutUrlDesc' | translate }}</mat-hint>
+                        </mat-form-field>
+                        <mat-expansion-panel expanded style="margin-top: 10px;">
+                            <mat-expansion-panel-header>
+                                <mat-panel-title color="primary">
+                                    {{ 'lang.mappingHeaders' | translate }}
+                                </mat-panel-title>
+                            </mat-expansion-panel-header>
+                            <mat-form-field *ngFor="let item of sso.mapping;let i=index">
+                                <input matInput name="input_{{i}}"
+                                       [(ngModel)]="item.ssoId"
+                                       [value]="item.ssoId"
+                                       [placeholder]="item.maarchId" required>
+                                <mat-hint>{{ item.desc | translate }}</mat-hint>
+                            </mat-form-field>
+                        </mat-expansion-panel>
+                        <div class="text-center" style="padding:10px;">
+                            <button
+                                    mat-raised-button
+                                    [disabled]="!isValid(ssoForm) || savingConfig"
+                                    color="primary"
+                                    name="submit">
+                                {{ 'lang.validate' | translate }}
+                            </button>
+                            <button
+                                    mat-raised-button
+                                    type="button"
+                                    color="primary"
+                                    (click)="cancel()"
+                                    [disabled]="!isValid(ssoForm) || savingConfig"
+                                    name="cancel">
+                                {{ 'lang.cancel' | translate }}
+                            </button>
+                        </div>
+                    </form>
+                </mat-card>
+            </div>
+        </div>
+    </mat-sidenav-content>
+</mat-sidenav-container>

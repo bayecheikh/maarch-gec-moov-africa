@@ -1,0 +1,100 @@
+<div class="process-tool">
+    <div (click)="!module.disabled ? changeTab(module.id) : false"
+         *ngFor="let module of processTool"
+         [class.process-tool-module-active]="module.id === currentTool"
+         [class.tool-disabled]="module.disabled"
+         [matRippleDisabled]="module.disabled" class="process-tool-module jiggle" matRipple>
+        <mat-icon *ngIf="module.count > 0" class="fas fa-circle has-content"></mat-icon>
+        <mat-icon [class]="module.icon"></mat-icon>
+        <span>{{ module.label }}</span>
+    </div>
+</div>
+<div [class.toolbar-container-no-padding]="currentTool === 'history'" class="toolbar-container">
+    <app-dashboard-resume
+            (goToEvent)="currentTool=$event"
+            *ngIf="currentTool === 'dashboard'"
+            [currentTool]="currentTool"
+            [resId]="resId"
+    >
+    </app-dashboard-resume>
+    <app-history-list
+            *ngIf="currentTool === 'history'"
+            [resId]="resId"
+    >
+    </app-history-list>
+    <app-notes-list
+        #appNotesList
+        (reloadBadgeNotes)="refreshBadge($event,'notes')"
+        *ngIf="currentTool === 'notes'"
+        [editMode]="true"
+        [resId]="resId"
+    >
+    </app-notes-list>
+    <app-visa-workflow
+        #appVisaWorkflow
+        (refreshActionsList)="updateCurrentWorkflowUserRole()"
+        *ngIf="currentTool === 'visaCircuit'"
+        [adminMode]="privilegeService.hasCurrentUserPrivilege('config_visa_workflow')"
+        [resId]="resId"
+        [target]="'signatureBook'"
+    >
+    </app-visa-workflow>
+    <app-indexing-form
+            *ngIf="currentTool === 'info'"
+            [canEdit]="false"
+            [groupId]="groupId"
+            [hideDiffusionList]="true"
+            [indexingFormId]="modelId"
+            [mode]="'process'"
+            [resId]="resId">
+    </app-indexing-form>
+    <app-linked-resource-list
+            (reloadBadgeLinkedResources)="refreshBadge($event,'linkedResources')"
+            *ngIf="currentTool === 'linkedResources'"
+            [resId]="resId"
+    >
+    </app-linked-resource-list>
+    <app-diffusions-list
+        #appDiffusionsList
+        *ngIf="currentTool === 'diffusionList'"
+        [adminMode]="false"
+        [expanded]="true"
+        [resId]="resId"
+        [target]="'details'">
+    </app-diffusions-list>
+    <app-sent-resource-list
+            (reloadBadgeSentResource)="refreshBadge($event,'emails')"
+            *ngIf="currentTool === 'emails'"
+            [currentBasketId]="basketId"
+            [currentGroupId]="groupId"
+            [currentUserId]="userId"
+            [resId]="resId"
+    >
+    </app-sent-resource-list>
+    <app-avis-workflow
+        #appAvisWorkflow
+        *ngIf="currentTool === 'opinionCircuit'"
+        [adminMode]="false"
+        [resId]="resId">
+    </app-avis-workflow>
+    <app-attachments-list
+            (attachmentsCreationSb)="attachmentsCreationSb.emit($event)"
+            (attachmentsDeletionSb)="attachmentsDeletionSb.emit($event)"
+            (attachmentsModificationSb)="attachmentsModificationSb.emit($event)"
+            (reloadBadgeAttachments)="refreshBadge($event,'attachments')"
+            *ngIf="currentTool === 'attachments'"
+            [canAdd]="signatureBookService.canAddAttachments"
+            [hideIntegrationActions]="true"
+            [isFromInternalParaph]="true"
+            [resId]="resId"
+            [target]="'process'"
+    >
+    </app-attachments-list>
+    <div class="save-modifications">
+        <button (click)="saveTool()" *ngIf="isToolModified()" [title]="'lang.saveModifications' | translate"
+                color="accent" mat-fab>
+            <mat-icon class="fas fa-check" style="height:auto;font-size:20px;"></mat-icon>
+        </button>
+    </div>
+</div>
+

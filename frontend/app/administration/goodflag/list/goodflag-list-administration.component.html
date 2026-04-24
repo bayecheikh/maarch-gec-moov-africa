@@ -1,0 +1,278 @@
+<mat-sidenav-container autosize class="maarch-container">
+    <ng-template #adminMenuTemplate>
+        <mat-nav-list>
+            <h3 mat-subheader>{{ 'lang.actions' | translate }}</h3>
+            <a mat-list-item routerLink="/administration/goodflag/new">
+                <mat-icon aria-hidden="true" class="fa fa-plus" color="primary" mat-list-icon></mat-icon>
+                <p mat-line>
+                    {{ 'lang.add' | translate }}
+                </p>
+            </a>
+        </mat-nav-list>
+    </ng-template>
+    <mat-sidenav-content role="main">
+        <div class="bg-head">
+            <div [class.customContainerRight]="appService.getViewMode()" class="bg-head-title">
+                <div class="bg-head-title-label">
+                    <app-header-left></app-header-left>
+                </div>
+                <div class="bg-head-title-tool">
+                    <app-header-right></app-header-right>
+                </div>
+            </div>
+            <div [class.fullContainer]="appService.getViewMode()" class="bg-head-content">
+            </div>
+        </div>
+        <div [class.fullContainer]="appService.getViewMode()" class="container">
+            <div class="container-content">
+                <div *ngIf="loading" class="loading">
+                    <mat-spinner aria-live="polite" role="status" style="margin:auto;"></mat-spinner>
+                </div>
+                <mat-accordion style="margin: 10px;">
+                    <mat-expansion-panel [disabled]="loading" expanded>
+                        <mat-expansion-panel-header>
+                            <mat-panel-title [title]="'lang.goodflagConfig' | translate" style="font-weight: 500">
+                                {{ 'lang.goodflagConfig' | translate }}
+                            </mat-panel-title>
+                            <mat-panel-description [title]="'lang.goodflagConfigDesc' | translate">
+                                {{ 'lang.goodflagConfigDesc' | translate }}
+                            </mat-panel-description>
+                        </mat-expansion-panel-header>
+                        <div class="formType" style="margin-top: 20px;">
+                            <div [title]="'lang.authConfig' | translate" class="formType-title">
+                                {{ 'lang.authConfig' | translate }}
+                            </div>
+                            <div style="width: 100%;">
+                                <div class="col-md-6">
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>{{ 'lang.goodflagUrl' | translate }}</mat-label>
+                                        <input #goodflagUrlModel="ngModel" (blur)="saveConfiguration(goodflagUrlModel)"
+                                               [(ngModel)]="goodflagConfig.url"
+                                               [title]="'lang.goodflagUrl' | translate"
+                                               id="goodflagUrl"
+                                               matInput
+                                               name="goodflagUrl"
+                                               placeholder="https://goodflag/api/"
+                                               required
+                                               type="text"
+                                        >
+                                    </mat-form-field>
+                                </div>
+                                <div class="col-md-6">
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>{{ (!goodflagConfig.accessTokenAlreadySet ? 'lang.accessToken' : 'lang.accessTokenModification') | translate }}</mat-label>
+                                        <input #accessTokenModel="ngModel"
+                                               (blur)="saveConfiguration(accessTokenModel)"
+                                               [(ngModel)]="goodflagConfig.accessToken"
+                                               [placeholder]="(!goodflagConfig.accessTokenAlreadySet ? 'lang.accessToken' : 'lang.accessTokenModification') | translate"
+                                               [title]="(!goodflagConfig.accessTokenAlreadySet ? 'lang.accessToken' : 'lang.accessTokenModification') | translate"
+                                               id="accessToken"
+                                               matInput
+                                               name="accessToken"
+                                               required
+                                               type="text"
+                                        >
+                                    </mat-form-field>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="formType" style="margin-top: 20px;">
+                            <div class="formType-title">
+                                Paramètres de validité
+                            </div>
+                            <div style="width: 100%;">
+                                <div class="col-md-6">
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>{{ 'lang.validityPeriod' | translate }}</mat-label>
+                                        <input #validityPeriodModel="ngModel"
+                                               (blur)="saveConfiguration(validityPeriodModel)"
+                                               [(ngModel)]="goodflagConfig.options.validityPeriod"
+                                               [title]="'lang.validityPeriod' | translate"
+                                               aria-describedby="validityPeriodError"
+                                               id="validityPeriod"
+                                               matInput
+                                               min="1"
+                                               name="validityPeriod"
+                                               required
+                                               type="number"
+                                        >
+                                        <mat-error
+                                                *ngIf="validityPeriodModel.invalid && (validityPeriodModel.dirty || validityPeriodModel.touched)"
+                                                id="validityPeriodError"
+                                                role="alert">
+                                        <span *ngIf="validityPeriodModel.errors?.['required']">
+                                            {{ 'lang.validityPeriodRequired' | translate }}
+                                        </span>
+                                            <span *ngIf="validityPeriodModel.errors?.['min']">
+                                            {{ 'lang.validityPeriodMin' | translate }}
+                                        </span>
+                                        </mat-error>
+                                    </mat-form-field>
+                                </div>
+                                <div class="col-md-6">
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>{{ 'lang.invitePeriod' | translate }}</mat-label>
+                                        <mat-select
+                                                id="invitePeriod"
+                                                name="invitePeriod"
+                                                required
+                                                [(ngModel)]="goodflagConfig.options.invitePeriod"
+                                                [placeholder]="'lang.invitePeriod' | translate"
+                                                [title]="'lang.invitePeriod' | translate"
+                                                [attr.aria-label]="'lang.invitePeriod' | translate"
+                                                (selectionChange)="saveConfiguration()">
+                                            <mat-option
+                                                    *ngFor="let period of invitePeriods"
+                                                    [value]="period.value"
+                                                    [title]="period.label"
+                                            >
+                                                {{ period.label }}
+                                            </mat-option>
+                                        </mat-select>
+                                    </mat-form-field>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="formType" style="margin-top: 20px;">
+                            <div class="formType-title">
+                                {{ 'lang.statusAssociation' | translate }}
+                            </div>
+                            <div style="width: 100%;">
+                                <div class="row status-container">
+                                    <div class="col-md-6" style="margin-left: 20px">
+                                        <mat-form-field>
+                                            <mat-label>{{ 'lang.goodflagStatus' | translate }}</mat-label>
+                                            <input [value]="'lang.workflowFinishedStatus' | translate" matInput
+                                                   readonly>
+                                        </mat-form-field>
+                                    </div>
+                                    <div class="col-md-6" style="margin-right: 10px;">
+                                        <app-plugin-select-search
+                                                (afterSelected)="saveConfiguration()"
+                                                [class]="''"
+                                                [datas]="statuses"
+                                                [formControlSelect]="workflowFinishedStatus"
+                                                [id]="'statusId'"
+                                                [label]="'lang.associatedStatus' | translate"
+                                                [placeholderLabel]="'lang.chooseValue' | translate"
+                                                [showLabel]="true"
+                                                style="width:100%;">
+                                        </app-plugin-select-search>
+                                    </div>
+                                </div>
+                                <div class="row status-container">
+                                    <div class="col-md-6" style="margin-left: 20px">
+                                        <mat-form-field>
+                                            <mat-label>{{ 'lang.goodflagStatus' | translate }}</mat-label>
+                                            <input [value]="'lang.workflowStoppedStatus' | translate" matInput readonly>
+                                        </mat-form-field>
+                                    </div>
+                                    <div class="col-md-6" style="margin-right: 10px;">
+                                        <app-plugin-select-search
+                                                (afterSelected)="saveConfiguration()"
+                                                [class]="''"
+                                                [datas]="statuses"
+                                                [formControlSelect]="workflowStoppedStatus"
+                                                [id]="'statusId'"
+                                                [label]="'lang.associatedStatus' | translate"
+                                                [placeholderLabel]="'lang.chooseValue' | translate"
+                                                [showLabel]="true"
+                                                style="width:100%;">
+                                        </app-plugin-select-search>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 20px;">
+                            <mat-slide-toggle
+                                    (ngModelChange)="goodflagConfig.options.optionOtp = $event; saveConfiguration()"
+                                    [(ngModel)]="goodflagConfig.options.optionOtp"
+                                    [attr.aria-label]="'lang.allowExternalUsers' | translate"
+                                    [checked]="goodflagConfig.options.optionOtp"
+                                    [title]="'lang.allowExternalUsers' | translate"
+                                    color="primary"
+                            >
+                                {{ 'lang.allowExternalUsers' | translate }}
+                            </mat-slide-toggle>
+                        </div>
+                    </mat-expansion-panel>
+                </mat-accordion>
+                <mat-card *ngIf="!loading" class="card-app-content">
+                    <div class="row">
+                        <div class="col-md-6 col-xs-6">
+                            <mat-form-field>
+                                <input
+                                        [formControl]="adminService.getFilterField()"
+                                        [placeholder]="'lang.filterBy' | translate"
+                                        matInput>
+                                <button (click)="adminService.searchTerm.setValue('')"
+                                        *ngIf="adminService.searchTerm.value !== ''"
+                                        [title]="'lang.clearFilter' | translate"
+                                        aria-label="Clear" mat-button
+                                        mat-icon-button
+                                        matSuffix>
+                                    <mat-icon aria-hidden="true" class="fas fa-times" style="color:#B3B3B3"></mat-icon>
+                                </button>
+                            </mat-form-field>
+                        </div>
+                        <div class="col-md-6 col-xs-6">
+                            <div class="table-head table-head-tool">
+                                <span style="position: relative;">
+                                    <mat-paginator #paginator [length]="100" [pageSizeOptions]="[10, 25, 50, 100, 150]"
+                                                   [pageSize]="10"></mat-paginator>
+                                    <app-select-page [paginator]="paginator"></app-select-page>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <mat-table #table [dataSource]="adminService.getDataSource()" matSort matSortDisableClear>
+                        <ng-container matColumnDef="label">
+                            <mat-header-cell *matHeaderCellDef
+                                             [class.hide-for-mobile]="appService.getViewMode()"
+                                             mat-sort-header
+                                             role="columnheader">
+                                {{ 'lang.label' | translate }}
+                            </mat-header-cell>
+                            <mat-cell *matCellDef="let element" [class.hide-for-mobile]="appService.getViewMode()">
+                                {{ element.label }}
+                            </mat-cell>
+                        </ng-container>
+                        <ng-container matColumnDef="description">
+                            <mat-header-cell *matHeaderCellDef
+                                             [class.hide-for-mobile]="appService.getViewMode()"
+                                             mat-sort-header
+                                             role="columnheader">
+                                {{ 'lang.description' | translate }}
+                            </mat-header-cell>
+                            <mat-cell *matCellDef="let element" [class.hide-for-mobile]="appService.getViewMode()">
+                                {{ element.description }}
+                            </mat-cell>
+                        </ng-container>
+                        <ng-container matColumnDef="actions">
+                            <mat-header-cell *matHeaderCellDef role="columnheader" style="flex:none"></mat-header-cell>
+                            <mat-cell *matCellDef="let element" style="flex:none;justify-content: flex-end;">
+                                <button (click)="$event.stopPropagation(); deleteAccount(element.id)"
+                                        [attr.aria-label]="'lang.delete' | translate"
+                                        [matTooltip]="'lang.delete' | translate"
+                                        color="warn"
+                                        mat-icon-button>
+                                    <mat-icon aria-hidden="true"
+                                              class="fa fa-trash-alt fa-2x"></mat-icon>
+                                </button>
+                            </mat-cell>
+                        </ng-container>
+                        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+                        <mat-row *matRowDef="let row; columns: displayedColumns;"
+                                 matTooltip="{{'lang.view' | translate}}"
+                                 routerLink="/administration/goodflag/{{row.id}}"
+                                 style="cursor:pointer;"></mat-row>
+                    </mat-table>
+                    <div class="mat-paginator"
+                         style="min-height:48px;display: flex;justify-content: end;align-items: center;padding-right: 20px;">
+                        {{ templates.length }} {{ 'lang.goodflagTemplates' | translate }}
+                    </div>
+                </mat-card>
+            </div>
+        </div>
+    </mat-sidenav-content>
+</mat-sidenav-container>

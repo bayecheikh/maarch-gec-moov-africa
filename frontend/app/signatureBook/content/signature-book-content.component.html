@@ -1,0 +1,34 @@
+<app-maarch-sb-information
+        *ngIf="!loading"
+        [attr.aria-label]="'lang.mailInformations' | translate"
+        [documentData]="documentData"
+        [position]="position"
+        role="region">
+</app-maarch-sb-information>
+<div class="sbContent-container">
+    <div *ngIf="loading" aria-live="polite" class="loading" role="status">
+        <mat-spinner style="margin:auto;"></mat-spinner>
+    </div>
+    <ng-container #myPlugin></ng-container>
+    <app-document-viewer
+            *ngIf="!pluginInstance && documentData && position === 'left' && !loading"
+            [attr.aria-label]="documentData?.chrono ? documentData.chrono + ' - ' + documentData.title : documentData.title"
+            [editMode]="false"
+            [mode]="documentType === 'attachments' ? 'attachment' : 'mainDocument'"
+            [resId]="documentData.resId"
+            [title]="documentData?.chrono ? documentData.chrono + ' - ' + documentData.title : documentData.title"
+            class="doc-viewer-class"
+            role="application">
+    </app-document-viewer>
+
+    <div *ngIf="!documentData && !loading" aria-live="polite" class="empty-doc" role="status">
+        <ng-container *ngIf="position === 'right'">
+            <mat-icon aria-hidden="true" class="fa-solid fa-file-signature"></mat-icon>
+            <div>{{ 'lang.noDocumentToSign' | translate }}</div>
+        </ng-container>
+        <ng-container *ngIf="position === 'left'">
+            <mat-icon aria-hidden="true" class="far fa-times-circle"></mat-icon>
+            <div>{{ 'lang.noAnnex' | translate }}</div>
+        </ng-container>
+    </div>
+</div>

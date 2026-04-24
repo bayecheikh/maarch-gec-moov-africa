@@ -1,0 +1,42 @@
+.panelHeader {
+    background-color: var(--maarch-color-secondary);
+    display: flex;
+    align-items: center;
+    &-logo {
+        flex: 1;
+    }
+
+    &-button {
+        display: flex;
+        align-items: center;
+
+        .mat-icon-button {
+            font-size: 25px;
+            color: var(--maarch-color-primary);
+        }
+    }
+
+    &-backHome {
+        i {
+            height: auto;
+            color:
+            var(--maarch-color-primary);
+            background:
+            var(--maarch-color-secondary);
+            padding: 10px;
+            border-radius: 20px;
+            font-size: 18px;
+        }
+
+        span {
+            font-size: 13px;
+            color: var(--maarch-color-primary);
+        }
+    }
+}
+
+.maarchLogo {
+    height: 80px;
+    width: auto;
+    padding: 20px;
+}

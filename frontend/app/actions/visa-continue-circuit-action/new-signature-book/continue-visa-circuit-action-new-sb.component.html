@@ -1,0 +1,273 @@
+<ng-container #myPlugin></ng-container>
+<div class="mat-dialog-content-container">
+    <h1 mat-dialog-title>{{ data.action.label }}</h1>
+    <div mat-dialog-content>
+        <div *ngIf="loading" class="loading" style="display:flex;height:100%;">
+            <mat-spinner style="margin:auto;"></mat-spinner>
+        </div>
+        <mat-sidenav-container autosize style="height:100%;">
+            <mat-sidenav-content style="background: white;padding:10px;">
+                <div *ngIf="!loading"
+                     [attr.aria-label]="'lang.digitalCertificate' | translate"
+                     class="checkbox-container">
+                    <mat-checkbox
+                            (change)="setVisaWorkflow(visaWorkflowByResource)"
+                            *ngIf="canShowDigitalCertificate()"
+                            [(ngModel)]="parameters.digitalCertificate"
+                            [checked]="parameters.digitalCertificate"
+                            [disabled]="atLeastOneDocumentHasDigitalSignature() || parameters.applyTimestamp"
+                            [title]="(atLeastOneDocumentHasDigitalSignature()) ? ('lang.digitalSignatureIsMandatory' | translate) : ('lang.digitalCertificate' | translate)"
+                            color="primary"
+                            name="digitalCertificate">
+                        {{ 'lang.digitalCertificate' | translate }}
+                    </mat-checkbox>
+                    <mat-checkbox
+                            (change)="setVisaWorkflow(visaWorkflowByResource)"
+                            *ngIf="canShowTimestamp()"
+                            [(ngModel)]="parameters.applyTimestamp"
+                            [checked]="parameters.applyTimestamp"
+                            [disabled]="!parameters.digitalCertificate"
+                            [title]="'lang.applyTimestamp' | translate"
+                            color="primary"
+                            name="timestamp">
+                        {{ 'lang.applyTimestamp' | translate }}
+                    </mat-checkbox>
+                    <mat-checkbox
+                            (change)="toggleSelection($event)"
+                            *ngIf="docsToSignWithEmptyStamps.length > 0 && canApplyStamp()"
+                            [(ngModel)]="parameters.stampSelection"
+                            [disabled]="signatureBookService.userStamps.length === 0"
+                            [title]="(signatureBookService.userStamps.length > 0 ? 'lang.applyStampAction': 'lang.emptyStamps') | translate"
+                            color="primary"
+                            name="applyStamp">
+                        {{ 'lang.applyStampAction' | translate }}
+                    </mat-checkbox>
+                </div>
+                <div *ngIf="!loading && parameters.stampSelection" class="stamps-component">
+                    <button
+                            (click)="scrollableDirective.scrollLeft()"
+                            *ngIf="!scrollableDirective.disableLeftScroll"
+                            class="scroll-button left"
+                            mat-icon-button>
+                        <mat-icon class="fas fa-chevron-left"></mat-icon>
+                    </button>
+                    <div
+                            #scrollableDirective="appScrollable"
+                            [class.center-container]="scrollableDirective.disableLeftScroll && scrollableDirective.disableRightScroll"
+                            [itemSelector]="'.stamp-button'"
+                            appScrollable
+                            class="stamps-container"
+                    >
+                        <button
+                                (click)="selectStamp(stamp)"
+                                *ngFor="let stamp of signatureBookService.userStamps"
+                                [class.selected-stamp]="selectedStamp?.id === stamp.id"
+                                [style.backgroundImage]="'url(' + (stamp.contentUrl | secureUrl | async) + ')'"
+                                class="stamp-button"
+                                mat-raised-button>
+                        </button>
+                    </div>
+                    <button
+                            (click)="scrollableDirective.scrollRight()"
+                            *ngIf="!scrollableDirective.disableRightScroll"
+                            class="scroll-button right"
+                            mat-icon-button>
+                        <mat-icon class="fas fa-chevron-right"></mat-icon>
+                    </button>
+                </div>
+
+                <div class="make-action-stream-icon">
+                    <div class="make-action">
+                        {{ 'lang.makeActionOn' | translate }}
+                        <b *ngIf="data.resIds.length === 0" class="highlight"
+                           color="primary">{{ 'lang.currentIndexingMail' | translate }}</b>
+                        <b *ngIf="data.resIds.length === 1" class="highlight"
+                           color="primary">{{ data.resource.chrono }}</b>
+                        <b *ngIf="data.resIds.length > 1" class="highlight" color="primary">{{ data.resIds.length }}
+                            {{ 'lang.elements' | translate }}</b> ?
+                    </div>
+                    <button (click)="snav2.toggle()"
+                            *ngIf="data.resIds.length === 1"
+                            [attr.aria-hidden]="true"
+                            [title]="'lang.toggleVisaWorkflow' | translate"
+                            mat-icon-button
+                            name="toggleVisaWorkflow">
+                        <mat-icon class="fa fa-stream material-icons"></mat-icon>
+                    </button>
+                </div>
+                <app-maarch-message
+                        *ngIf="!loading && parameters.digitalCertificate && signatureBookService.timestampConfig.autoApply && signatureBookService.timestampConfig.enabled"
+                        [content]="'lang.applyTimestampDesc' | translate"
+                        [mode]="'info'"></app-maarch-message>
+                <app-maarch-message *ngIf="!loading && isEmptyWorkflow" mode="danger">
+                    <span>{{ 'lang.isEmptyWorkflow' | translate }}</span>
+                </app-maarch-message>
+                <app-maarch-message
+                        *ngIf="!loading && data.resIds.length > 0 && atLeastOneDocumentHasNoStamp() && canHadStampSignature()"
+                        [mode]="'warning'">
+                    <div [innerHTML]="'lang.atLeastOneDocumentHasNoStamp' | translate" [title]="'lang.atLeastOneDocumentHasNoStamp' | translate | stripTags"
+                         class="at-least-no-one-stamp"
+                         role="alert">
+                    </div>
+                    <div *ngIf="!parameters.digitalCertificate" [attr.aria-label]="'lang.seenAsVisaUser' | translate | stripTags" [innerHTML]="'lang.seenAsVisaUser' | translate"
+                         class="at-least-no-one-stamp"
+                         role="alert"></div>
+                </app-maarch-message>
+                <app-maarch-message
+                        *ngIf="data.resIds.length === 1 && appVisaWorkflow !== undefined && appVisaWorkflow.getNextVisaUser() !== ''"
+                        [mode]="'info'">
+                    <div class="workflow-info">
+                        <div
+                                [attr.aria-label]="('lang.sendToDocTo' | translate) + ' <b>' + appVisaWorkflow.getNextVisaUser().labelToDisplay + '</b>'"
+                                [innerHTML]="('lang.sendToDocTo' | translate) + ' <b>' + appVisaWorkflow.getNextVisaUser().labelToDisplay + '</b>'"
+                                [title]="('lang.sendToDocTo' | translate) + ' <b>' + appVisaWorkflow.getNextVisaUser().labelToDisplay + '</b>'"></div>
+                        <div (click)="snav2.toggle()"
+                             [title]="(!snav2.opened ? 'lang.showVisaWorkflow' : 'lang.hideVisaWorkflow') | translate"
+                             class="show-hide-workflow">
+                            <span>{{ (!snav2.opened ? 'lang.showVisaWorkflow' : 'lang.hideVisaWorkflow') | translate }}</span>
+                        </div>
+                    </div>
+                </app-maarch-message>
+                <app-maarch-message
+                        *ngIf="data.resIds.length === 1 && appVisaWorkflow !== undefined && appVisaWorkflow.getNextVisaUser() === '' && !noResourceToProcess"
+                        [mode]="'info'">
+                    <div class="workflow-info">
+                        <div
+                                [attr.aria-label]="'lang.endWorkflow' | translate"
+                                [innerHTML]="'lang.endWorkflow' | translate"
+                                [title]="'lang.endWorkflow' | translate"></div>
+                        <div (click)="snav2.toggle()"
+                             [attr.aria-label]="(!snav2.opened ? 'lang.showVisaWorkflow' : 'lang.hideVisaWorkflow') | translate"
+                             [title]="(!snav2.opened ? 'lang.showVisaWorkflow' : 'lang.hideVisaWorkflow') | translate"
+                             class="show-hide-workflow">
+                            <span>{{ (!snav2.opened ? 'lang.showVisaWorkflow' : 'lang.hideVisaWorkflow') | translate }}</span>
+                        </div>
+                    </div>
+                </app-maarch-message>
+                <app-maarch-message *ngIf="resourcesErrors.length > 0"
+                                    [mode]="'danger'">
+                    <p [title]="'lang.canNotMakeAction' | translate">
+                        {{ 'lang.canNotMakeAction' | translate }} :
+                    </p>
+                    <ul>
+                        <li *ngFor="let ressource of resourcesErrors"
+                            [attr.aria-label]="ressource.alt_identifier + ' : ' + ('lang.' + ressource.reason | translate)"
+                            [title]="ressource.alt_identifier + ' : ' + ('lang.' + ressource.reason | translate)">
+                            <b>{{ ressource.alt_identifier }}</b> : {{ 'lang.' + ressource.reason | translate }}
+                        </li>
+                    </ul>
+                </app-maarch-message>
+                <app-maarch-message *ngIf="resourcesWarnings.length > 0"
+                                    [mode]="'info'">
+                    <ul style="margin: 0; padding-bottom: 0;">
+                        <li *ngFor="let ressource of resourcesWarnings"
+                            [attr.aria-label]="ressource.alt_identifier + ' : ' + ('lang.' + ressource.reason | translate)"
+                            [title]="ressource.alt_identifier + ' : ' + ('lang.' + ressource.reason | translate)">
+                            <b>{{ ressource.alt_identifier }}</b> : {{ 'lang.' + ressource.reason | translate }}
+                        </li>
+                    </ul>
+                </app-maarch-message>
+                <app-maarch-message
+                        *ngIf="resourcesMailing.length > 0 && appVisaWorkflow !== undefined && appVisaWorkflow.getNextVisaUser() !== '' && appVisaWorkflow.getNextVisaUser().requested_signature"
+                        [mode]="'info'">
+                    <p
+                            [attr.aria-label]="'lang.mailingActionInformations' | translate"
+                            [title]="'lang.mailingActionInformations' | translate">
+                        {{ 'lang.mailingActionInformations' | translate }}
+                    </p>
+                    <ul>
+                        <li *ngFor="let ressource of resourcesMailing" [attr.aria-label]="ressource.alt_identifier"
+                            [title]="ressource.alt_identifier">
+                            <b>{{ ressource.alt_identifier }}</b>
+                        </li>
+                    </ul>
+                </app-maarch-message>
+                <div *ngIf="!loading && data.resIds.length > 0 " class="div-container">
+                    <div [attr.aria-label]="data.resource.docsToSign.length + ' ' + ('lang.docsToVisaSign' | translate)"
+                         [title]="data.resource.docsToSign.length + ' ' + ('lang.docsToVisaSign' | translate)"
+                         class="docs-title">
+                        <span> {{ data.resource.docsToSign.length }} {{ 'lang.docsToVisaSign' | translate }}</span>
+                    </div>
+                    <div class="docs-container">
+                        <div class="docs-to-sign">
+                            <ng-container *ngIf="data.resource.docsToSign?.length > 0">
+                                <div *ngFor="let resource of data.resource.docsToSign" [attr.aria-label]="resource.chrono + ' - ' + resource.title"
+                                     [title]="resource.chrono + ' - ' + resource.title"
+                                     class="content">
+                                    <div [attr.aria-label]="('lang.chrono' | translate) + ' : ' + resource.chrono"
+                                         class="chrono-stamp">
+                                        <span [title]="resource.chrono" class="chrono">{{ resource.chrono }}</span>
+                                        <div *ngIf="resource.stamps.length === 0 && canHadStampSignature()"
+                                             [title]="'lang.noStampDesc' | translate"
+                                             class="empty-stamp-warn">
+                                            <mat-icon class="fas fa-circle-exclamation"></mat-icon>
+                                            <span
+                                                    [attr.aria-label]="'lang.noStamp' | translate"
+                                                    class="empty-stamp">
+                                                {{ 'lang.noStamp' | translate }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div [attr.aria-label]="('lang.subject' | translate) + ' : ' + resource.title"
+                                         class="resource-title">
+                                        <span [title]="resource.title">{{ resource.title }}</span>
+                                    </div>
+                                </div>
+                            </ng-container>
+                            <ng-container *ngIf="data.resource.docsToSign?.length === 0">
+                                <span [title]="'lang.emptyDocsToSign' | translate"
+                                      class="empty-docs-to-sign">{{ 'lang.emptyDocsToSign' | translate }}</span>
+                            </ng-container>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flow;">
+                    <mat-expansion-panel [expanded]="noteExpanded" style="margin-top: 10px;">
+                        <mat-expansion-panel-header>
+                            <mat-panel-title color="primary">
+                                {{ 'lang.note' | translate }}
+                            </mat-panel-title>
+                        </mat-expansion-panel-header>
+                        <ng-template matExpansionPanelContent>
+                            <app-note-editor #noteEditor [resIds]="data.resIds"></app-note-editor>
+                        </ng-template>
+                    </mat-expansion-panel>
+                </div>
+            </mat-sidenav-content>
+            <mat-sidenav #snav2 *ngIf="data.resIds.length === 1" [mode]="'side'"
+                         [ngStyle]="{'width': '600px', 'padding': '5px'}"
+                         [opened]="false"
+                         autoFocus="false"
+                         class="visa-workflow-sidenav"
+                         fixedTopGap="56"
+                         position='end'
+                         style="overflow-x:hidden;">
+                <mat-toolbar class="workflow-toolbar" color="primary">
+                    <mat-icon class="fas fa-list-ol"></mat-icon>
+                    <span>{{ 'lang.visaWorkflow' | translate }}</span>
+                </mat-toolbar>
+                <app-visa-workflow
+                        #appVisaWorkflow
+                        (workflowLoaded)="visaWorkflow = $event"
+                        [adminMode]="false"
+                        [resId]="data.resIds[0]"
+                        [target]="'action'">
+                </app-visa-workflow>
+            </mat-sidenav>
+        </mat-sidenav-container>
+    </div>
+    <span class="divider-modal"></span>
+    <div class="actions" mat-dialog-actions>
+        <button
+                (click)="onSubmit()"
+                [disabled]="isNotValidAction()"
+                [title]="((atLeastOneDocumentHasNoStamp() && !parameters.digitalCertificate)) ? ('lang.stampIsMandatory' | translate) : ('lang.validate' | translate)"
+                color="primary"
+                mat-button
+                mat-raised-button>{{ 'lang.validate' | translate }}
+        </button>
+        <button (click)="isModalCanceled = true; dialogRef.close()" [disabled]="loading" mat-button
+                mat-raised-button>{{ 'lang.cancel' | translate }}
+        </button>
+    </div>
+</div>

@@ -1,0 +1,35 @@
+<div class="mat-dialog-content-container">
+    <h1 mat-dialog-title>{{'lang.configurePlugin' | translate}}</h1>
+    <div mat-dialog-content>
+        <mat-horizontal-stepper linear="true" #stepper>
+            <mat-step [label]="'lang.downloadManifest' | translate">
+                <app-maarch-message [content]="'lang.downloadManifestMsg' | translate"></app-maarch-message>
+                <div style="text-align: center;">
+                    <button mat-raised-button color="primary" (click)="getManifest();stepper.next();">{{ 'lang.downloadManifest' | translate }}</button>
+                </div>
+            </mat-step>
+            <mat-step>
+                <ng-template matStepLabel>{{'lang.configuration' | translate}}</ng-template>
+                <div *ngFor="let step of configurartionStemps"
+                    style="padding-left: 100px;padding-right: 100px;">
+                    <app-maarch-message [content]="step.content"></app-maarch-message>
+                    <mat-card>
+                        <img style="width:100%" [src]="step.imgSrc" />
+                    </mat-card>
+                </div>
+            </mat-step>
+            <ng-template matStepperIcon="edit">
+                <mat-icon class="fa fa-check stepIcon"></mat-icon>
+            </ng-template>
+            <ng-template matStepperIcon="done">
+                <mat-icon class="fa fa-check stepIcon"></mat-icon>
+            </ng-template>
+        </mat-horizontal-stepper>
+    </div>
+    <span class="divider-modal"></span>
+    <div mat-dialog-actions class="actions">
+        <button *ngIf="stepper.selectedIndex === 1" mat-raised-button mat-button color="primary" (click)="stepper.previous()">{{'lang.previous' | translate}}</button>
+        <button mat-raised-button mat-button [mat-dialog-close]="">{{'lang.close' | translate}}</button>
+        <button *ngIf="stepper.selectedIndex === 0" mat-raised-button mat-button color="primary" (click)="stepper.next()">{{'lang.next' | translate}}</button>
+    </div>
+</div>

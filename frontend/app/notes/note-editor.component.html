@@ -1,0 +1,107 @@
+<mat-form-field appearance="outline" class="noteEditorContent">
+    <textarea [(ngModel)]="content" [placeholder]="title" id="inputNote" matInput></textarea>
+    <hr aria-hidden="true" style="margin-bottom: 10px;">
+    <span [title]="'lang.warningNote' | translate" class="warningNote">{{ 'lang.warningNote' | translate }}</span>
+    <button
+            [matMenuTriggerFor]="menuMain"
+            [title]="'lang.options' | translate"
+            color="primary"
+            mat-icon-button
+            matSuffix>
+        <mat-icon aria-hidden="true" fontIcon="fa-angle-right fa-2x" fontSet="fas"></mat-icon>
+    </button>
+    <mat-menu #menuMain="matMenu" [class]="'templateNoteListMenu'">
+        <button
+                (menuOpened)="getTemplatesNote()"
+                [matMenuTriggerFor]="menuTemplates"
+                [title]="'lang.noteTemplates' | translate"
+                mat-menu-item
+                role="menuitem">
+            <span>{{ 'lang.noteTemplates' | translate }}</span>
+        </button>
+        <button
+                *ngIf="!disableRestriction"
+                [matMenuTriggerFor]="menuEntities"
+                [title]="'lang.visibleBy' | translate"
+                mat-menu-item
+                role="menuitem">
+            <span>{{ 'lang.visibleBy' | translate }}</span>
+        </button>
+    </mat-menu>
+    <mat-menu #menuTemplates="matMenu" [class]="'templateNoteListMenu'">
+        <div [title]="'lang.noteTemplates' | translate" class="container-div">
+            {{ 'lang.noteTemplates' | translate }}
+        </div>
+        <button
+                (click)="selectTemplate(template)"
+                *ngFor="let template of templatesNote"
+                [matTooltip]="template.template_content" [title]="template.template_label"
+                mat-menu-item
+                matTooltipPosition="left">
+            <span>{{ template.template_label }}</span>
+        </button>
+        <button *ngIf="templatesNote.length === 0" [title]="'lang.noTemplate' | translate" disabled mat-menu-item>
+            <span>{{ 'lang.noTemplate' | translate }}</span>
+        </button>
+    </mat-menu>
+    <mat-menu #menuEntities="matMenu" [class]="'templateNoteListMenu fixedWidth'">
+        <div [title]="'lang.entities' | translate"
+             class="container-div">
+            {{ 'lang.entities' | translate }}
+        </div>
+        <ng-template matMenuContent>
+            <mat-form-field (click)="$event.stopPropagation();"
+                            [attr.aria-label]="'lang.searchEntities' | translate"
+                            appearance="outline"
+                            class="smallInput"
+                            floatLabel="never" style="margin-bottom: -15px;">
+                <input (click)="$event.stopPropagation();" (keydown)="$event.stopPropagation()"
+                       [formControl]="searchTerm"
+                       autocomplete="off"
+                       id="searchTerm" matInput placeholder="{{'lang.searchEntities' | translate}}">
+            </mat-form-field>
+            <ng-container>
+                <button (click)="$event.stopPropagation();selectEntity(entity)" *ngFor="let entity of entitiesList"
+                        [disabled]="entity.selected"
+                        [title]="entity.entity_label"
+                        class="labelFolder" mat-menu-item>
+                    {{ entity.entity_label }}
+                </button>
+            </ng-container>
+        </ng-template>
+    </mat-menu>
+
+    <button (click)="addNote()"
+            *ngIf="addMode" [disabled]="content.trim() === '' || loading" [title]="'lang.add' | translate"
+            color="primary"
+            mat-icon-button
+            matSuffix>
+        <mat-icon aria-hidden="true" fontIcon="fa-paper-plane fa-2x" fontSet="far"></mat-icon>
+    </button>
+    <button (click)="updateNote()"
+            *ngIf="upMode" [disabled]="content.trim() === '' || loading" [title]="'lang.validate' | translate"
+            color="primary"
+            mat-icon-button
+            matSuffix>
+        <mat-icon aria-hidden="true" fontIcon="fa-paper-plane fa-2x" fontSet="far"></mat-icon>
+    </button>
+</mat-form-field>
+<div style="overflow: auto;max-height: 75px;">
+    <div
+            [style.background]="(upMode && entitiesRestriction.length > 0) ? '#FFEDCC' : 'white'"
+            [title]="'lang.noteVisibleBy' | translate"
+            style="font-size: 11px;position: sticky;top: 0;">{{ 'lang.noteVisibleBy' | translate }}
+    </div>
+    <span *ngIf="entitiesRestriction.length === 0"
+          [title]="'lang.all' | translate"
+          class="label label-default noNoteRestriction">{{ 'lang.all' | translate }}</span>
+    <ng-container *ngFor="let entity of entities | sortBy: 'entity_label';let i=index;">
+        <span (click)="removeEntityRestriction(entitiesRestriction.indexOf(entity.id), i)"
+              *ngIf="entitiesRestriction.indexOf(entity.id) > -1"
+              [title]="'lang.restrictedEntity' | translate"
+              class="label label-default noteRestriction"><mat-icon aria-hidden="true"
+                                                                      class="fa fa-sitemap"></mat-icon>
+            {{ entity.entity_label }}&nbsp;<mat-icon aria-hidden="true" class="fa fa-times"
+                                                     style="cursor: pointer;"></mat-icon></span>
+    </ng-container>
+</div>

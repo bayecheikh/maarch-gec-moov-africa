@@ -1,0 +1,26 @@
+<mat-toolbar [attr.aria-label]="'lang.myStamps' | translate" [title]="'lang.myStamps' | translate" class="stamps-header"
+             color="primary">
+    <mat-icon aria-hidden="true" class="fa fa-pen-nib material-icons"></mat-icon>
+    <span aria-level="1" role="heading">{{ 'lang.myStamps' | translate }}</span>
+</mat-toolbar>
+<div class="component-container">
+    <div *ngIf="signatureBookService.userStamps.length > 0" class="stamps-container">
+        <button
+                (click)="signWithStamp(stamp)"
+                *ngFor="let stamp of signatureBookService.userStamps"
+                [attr.aria-label]="'lang.applyStamp' | translate"
+                [style.backgroundImage]="'url(' + (stamp.contentUrl | secureUrl | async) + ')'"
+                [title]="'lang.applyStamp' | translate"
+                class="stamp-button"
+                mat-raised-button
+        ></button>
+    </div>
+    <div *ngIf="signatureBookService.userStamps.length === 0"
+         [attr.aria-label]="'lang.noStamp' | translate"
+         [title]="'lang.noStamp' | translate"
+         class="no-stamp"
+         role="status">
+        <mat-icon aria-hidden="true" class="fa fa-ban"></mat-icon>
+        <span>{{ 'lang.noStamp' | translate }}</span>
+    </div>
+</div>

@@ -1,0 +1,165 @@
+<div *ngIf="loading"
+     [attr.aria-label]="'lang.loading' | translate"
+     aria-live="polite"
+     class="loading"
+     role="status"
+     style="display:flex;height:100%;">
+    <mat-spinner
+            [attr.aria-label]="'lang.loading' | translate"
+            style="margin:auto;">
+    </mat-spinner>
+</div>
+<div class="signatorybook-container" role="banner">
+    <app-signature-book-header
+            (setNextPrevEvent)="setNextPrev()"
+            (toggleResListDrawer)="drawerResList?.toggle()"
+            [attr.aria-label]="'lang.navigation' | translate"
+            [basketId]="basketId"
+            [canGoToNext]="canGoToNext"
+            [canGoToPrevious]="canGoToPrevious"
+            [groupId]="groupId"
+            [resId]="resId"
+            [userId]="userId">
+    </app-signature-book-header>
+    <mat-drawer-container
+            [attr.aria-label]="'lang.eventViewDoc' | translate"
+            [hasBackdrop]="false"
+            role="application"
+            style="flex: 1">
+        <mat-drawer
+            #drawerResList
+            (openedChange)="showPanelContent()"
+            [attr.aria-expanded]="drawerResList.opened"
+            [attr.aria-hidden]="!drawerResList.opened"
+            [attr.aria-label]="'lang.basketResources' | translate"
+            [ngStyle]="{'width': '500px'}"
+            autoFocus="false"
+            class="drawer-res-list"
+            mode="over"
+        >
+            <app-resources-list
+                #resourcesList
+                (afterGoToResource)="openResListPanel();"
+                (afterInit)="setNextPrev()"
+                (closeDrawerResList)="drawerResList?.close()"
+                [attr.aria-label]="'lang.basketResources' | translate"
+                [basketId]="basketId"
+                [basketLabel]="signatureBookService.basketLabel"
+                [groupId]="groupId"
+                [resId]="resId"
+                [userId]="userId"
+                role="list">
+            </app-resources-list>
+        </mat-drawer>
+        <mat-drawer-content role="main" style="display: flex; flex: 1">
+            <div class="signatorybook-contents">
+                <div [class.signatorybook-small-content]="signatureBookService.toolBarActive"
+                     aria-labelledby="attachments-section-title"
+                     class="signatorybook-content"
+                     role="region">
+                    <ng-scrollbar
+                            [attr.aria-label]="'lang.annexTargetDesc' | translate"
+                            autoHeightDisabled="false"
+                            class="book-mark"
+                            role="tablist"
+                    >
+                        <app-maarch-sb-tabs
+                            #maarchSbTabsLeft
+                            *ngIf="!loadingAttachments"
+                            [attr.aria-label]="'lang.annexTargetDesc' | translate"
+                            [documents]="signatureBookService.resourcesAttached"
+                            position="left"
+                            role="tablist">
+                        </app-maarch-sb-tabs>
+                    </ng-scrollbar>
+                    <div *ngIf="!loadingAttachments" class="book-content" role="tabpanel">
+                        <app-resource-toolbar
+                                (attachmentsCreationSb)="refreshAttachments($event)"
+                                (attachmentsDeletionSb)="deleteResource($event)"
+                                (attachmentsModificationSb)="handleAttachmentModification($event)"
+                                (refreshVisaWorkflow)="onRefreshVisaWorkflow()"
+                                *ngIf="signatureBookService.toolBarActive"
+                                [attr.aria-label]="'lang.resourceOverview' | translate"
+                                [basketId]="basketId"
+                                [groupId]="groupId"
+                                [resId]="resId"
+                                [userId]="userId"
+                        ></app-resource-toolbar>
+                        <app-maarch-sb-content
+                                *ngIf="!signatureBookService.toolBarActive"
+                                [attr.aria-label]="'lang.eventViewDoc' | translate"
+                                [userId]="userId"
+                                position="left"
+                                style="display: contents;"
+                        ></app-maarch-sb-content>
+                    </div>
+                </div>
+                <div aria-labelledby="signature-section-title"
+                     class="signatorybook-content"
+                     role="region">
+                    <div class="book-content">
+                        <mat-drawer-container [attr.aria-label]="'lang.signTargetDesc' | translate" role="application"
+                                              style="flex: 1;background: none;">
+                            <mat-drawer
+                                #drawerStamps
+                                [attr.aria-expanded]="drawerStamps.opened"
+                                [attr.aria-hidden]="!drawerStamps.opened"
+                                [attr.aria-label]="'lang.mySignSignatureBookDesc' | translate"
+                                class="drawer-stamps-list"
+                                mode="over"
+                                role="dialog"
+                            >
+                                <app-maarch-sb-stamps
+                                        (stampsLoaded)="defaultUserStamp = $event"
+                                        [attr.aria-label]="'lang.myStamps' | translate"
+                                        [userId]="userId"
+                                        role="list">
+                                </app-maarch-sb-stamps>
+                            </mat-drawer>
+                            <mat-drawer-content role="main"
+                                                style="display: flex; flex-direction: column; overflow-x: hidden;">
+                                <app-maarch-sb-content
+                                    #signatureBookContent
+                                    (fetchVersions)="initDocuments($event)"
+                                    *ngIf="!loadingDocsToSign"
+                                    [attr.aria-label]="'lang.docToSign' | translate"
+                                    [userId]="userId"
+                                    position="right"
+                                    style="display: contents;"
+                                >
+                                </app-maarch-sb-content>
+                                <app-maarch-sb-actions
+                                    #actionsList
+                                    (docsToSignUpdated)="docsToSignUpdated($event)"
+                                    (openPanelSignatures)="drawerStamps.toggle()"
+                                    *ngIf="!loadingDocsToSign"
+                                    [attr.aria-label]="'lang.internalParaphActions' | translate"
+                                    [basketId]="basketId"
+                                    [groupId]="groupId"
+                                    [resId]="resId"
+                                    [userId]="userId"
+                                    [userStamp]="defaultUserStamp"
+                                    role="toolbar"
+                                ></app-maarch-sb-actions>
+                            </mat-drawer-content>
+                        </mat-drawer-container>
+                    </div>
+                    <ng-scrollbar
+                            autoHeightDisabled="false"
+                            class="book-mark"
+                            role="tablist"
+                    >
+                        <app-maarch-sb-tabs
+                            #maarchSbTabsRight
+                            *ngIf="!loadingDocsToSign"
+                            [attr.aria-label]="'lang.docToSign' | translate"
+                            [documents]="signatureBookService.docsToSign"
+                            position="right"
+                            role="tablist">
+                        </app-maarch-sb-tabs>
+                    </ng-scrollbar>
+                </div>
+            </div>
+        </mat-drawer-content>
+    </mat-drawer-container>
+</div>

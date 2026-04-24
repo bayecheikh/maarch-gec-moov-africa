@@ -1,0 +1,31 @@
+<div class="editInProgress">
+    <div class="editInProgressMsg">
+        <i *ngIf="documentWebUrl !== null" class="fas fa-file-word bounce"></i>
+        <div *ngIf="documentWebUrl !== null">
+            {{'lang.editInProgress' | translate}}
+        </div>
+        <div *ngIf="documentWebUrl !== null" style="font-weight: bold;">
+            <i class="fas fa-exclamation-circle" style="font-size: 20px;"></i> {{'lang.sharePointWarning' | translate}}
+        </div>
+        <div *ngIf="documentWebUrl === null" style="font-weight: bold;">
+            {{'lang.' + 'sharepointEnvironmentInitialize' | translate}}...
+        </div>
+    </div>
+    <div *ngIf="documentWebUrl !== null" style="display: flex; justify-content: center">
+        <button mat-raised-button (click)="openDocument()" [disabled]="documentWebUrl === null" [color]="primaryColor ? 'primary' : null">
+            <div style="display: flex;align-items: center;gap: 5px">
+                <mat-icon class="fas fa-external-link-alt"></mat-icon>
+                {{'lang.accessToEditor' | translate}}
+            </div>
+        </button>
+        <button *ngIf="!hideDownloadButton && isModified" mat-raised-button (click)="downloadDocument()" [color]="primaryColor ? 'primary' : null">
+            <div style="display: flex;align-items: center;gap: 5px">
+                <i class="fas fa-download"></i>
+                {{'lang.getDocument' | translate}}
+            </div>
+        </button>
+    </div>
+    <div *ngIf="!hideCancelButton">
+        <button mat-button (click)="closeEditor()">{{'lang.cancel' | translate}}</button>
+    </div>
+</div>

@@ -1,0 +1,94 @@
+<div class="col-md-12">
+    <div>
+        <div class="alert-message alert-message-info" role="alert">
+            <p>{{'lang.sentToIxbusParapheur' | translate}}</p>
+        </div>
+    </div>
+    <div *ngIf="loading" class="loading" style="display:flex;height:100%;">
+        <mat-spinner style="margin:auto;"></mat-spinner>
+    </div>
+    <ng-container *ngIf="!loading">
+        <ng-container *ngIf="instances.length === 0 && natures.length === 0">
+            <app-maarch-message [mode]="'danger'" [content]="'lang.noIxbusInstance' | translate"></app-maarch-message>
+        </ng-container>
+        <ng-container *ngIf="natures.length === 0">
+            <app-maarch-message [mode]="'danger'" [content]="'lang.noIxbusNature' | translate"></app-maarch-message>
+        </ng-container>
+    </ng-container>
+    <ng-container *ngIf="instances.length > 0 || natures.length > 0">
+        <div *ngIf="instances.length > 0" class="form-group" style="margin-top: 10px">
+            <div class="col-sm-12">
+                <app-plugin-select-search style="width:100%;"
+                    [showLabel]="true"
+                    [class]="''"
+                    [label]="'lang.ixbusInstance' | translate"
+                    [placeholderLabel]="'lang.ixbusInstance' | translate"
+                    [formControlSelect]="selectInstance"
+                    [datas]="instances"
+                    [disabled]="instances.length === 0"
+                    [required]="true"
+                    (afterSelected)="ixbusDatas.instanceId = selectInstance.value; getNaturesByInstance(selectInstance.value)"
+                >
+                </app-plugin-select-search>
+            </div>
+        </div>
+
+        <div *ngIf="natures.length > 0" class="form-group" style="margin-top: 10px">
+            <div class="col-sm-12">
+                <app-plugin-select-search style="width:100%;"
+                    [showLabel]="true"
+                    [class]="''"
+                    [label]="'lang.natureIxbusParapheur' | translate"
+                    [placeholderLabel]="'lang.natureIxbusParapheur' | translate"
+                    [formControlSelect]="selectNature"
+                    [datas]="natures"
+                    [disabled]="natures.length === 0"
+                    [required]="true"
+                    (afterSelected)="ixbusDatas.nature = selectNature.value; changeModel(selectNature.value)"
+                >
+                </app-plugin-select-search>
+            </div>
+        </div>
+        <div class="form-group" style="margin-top: 10px">
+            <div class="col-sm-12">
+                <app-plugin-select-search style="width:100%;"
+                    [showLabel]="true"
+                    [class]="''"
+                    [label]="'lang.workflowModelIxbus' | translate"
+                    [placeholderLabel]="'lang.workflowModelIxbus' | translate"
+                    [formControlSelect]="selectWorkflow"
+                    [datas]="messagesModel"
+                    [disabled]="messagesModel.length === 0"
+                    [required]="true"
+                    (afterSelected)="ixbusDatas.messageModel = selectWorkflow.value"
+                >
+                </app-plugin-select-search>
+            </div>
+        </div>
+        <div class="form-group" style="margin-top: 10px">
+            <div class="col-sm-12">
+                <app-plugin-select-search style="width:100%;"
+                    [showLabel]="true"
+                    [class]="''"
+                    [label]="'lang.loginIxbus' | translate"
+                    [placeholderLabel]="'lang.loginIxbus' | translate"
+                    [formControlSelect]="selectUser"
+                    [datas]="users"
+                    [disabled]="users.length === 0"
+                    [required]="true"
+                    (afterSelected)="ixbusDatas.userId = selectUser.value; persistDatas()"
+                >
+                </app-plugin-select-search>
+            </div>
+        </div>
+        <mat-radio-group id="handwrittenSignature" name="handwrittenSignature" [(ngModel)]="ixbusDatas.signatureMode" (change)="persistDatas()"
+            color="primary">
+            <mat-radio-button value="manual" color="primary">
+                {{'lang.handwrittenSignature' | translate}}
+            </mat-radio-button>
+            <mat-radio-button value="electronic" color="primary" style="margin-left: 5px">
+                {{'lang.electronicSignature' | translate}}
+            </mat-radio-button>
+        </mat-radio-group>
+    </ng-container>
+</div>

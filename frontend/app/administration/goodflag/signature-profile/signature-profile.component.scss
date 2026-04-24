@@ -1,0 +1,18 @@
+.items-container {
+  background: #8080800a;
+  margin-top: 10px;
+  border: 1px solid #cdcdcd;
+  border-radius: 15px;
+  padding: 20px;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.item-section {
+  display: flex;
+  justify-content: flex-start
+}

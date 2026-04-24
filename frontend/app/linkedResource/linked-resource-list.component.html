@@ -1,0 +1,143 @@
+<ng-container *ngIf="loading; else elseLoading">
+    <div class="loading">
+        <mat-spinner
+                [attr.aria-live]="'polite'"
+                role="status">
+        </mat-spinner>
+    </div>
+</ng-container>
+<ng-template #elseLoading>
+    <mat-card id="viewThumbnail"
+              role="img"
+              style="display:none;position: fixed;z-index: 2;margin-left: 1px;left: 50%;transform: translate(-50%,-50%);top: 50%;">
+        <img *ngIf="thumbnailUrl !== ''" [src]="thumbnailUrl | secureUrl | async" aria-hidden="true"
+             style="max-height: 100vh;"/>
+    </mat-card>
+    <div class="row" style="margin: 0;">
+        <div class="col-md-12">
+            <mat-paginator
+                #paginator
+                [hidePageSize]="true"
+                [length]="100"
+                [pageSize]="10"
+                role="navigation">
+            </mat-paginator>
+        </div>
+    </div>
+    <mat-table #table [dataSource]="dataSource" matSort matSortActive="resId" matSortDirection="desc">
+        <ng-container matColumnDef="resId">
+            <mat-cell *matCellDef="let row" role="cell" style="flex: 1;flex-direction: column;padding: 0;">
+                <div class="sub-info" role="region">
+                    <span
+                            [attr.aria-label]="'lang.' + row.categoryId | translate"
+                            class="sub-info-data col-md-4">
+                        <mat-icon
+                                [title]="'lang.category_id' | translate"
+                                aria-hidden="true"
+                                class="fas fa-exchange-alt">
+                        </mat-icon>
+                        &nbsp;
+                        <span [title]="'lang.' + row.categoryId | translate">{{ 'lang.' + row.categoryId | translate }}</span>
+                    </span>
+                    <span
+                            (click)="openContact(row,'senders')"
+                            [attr.aria-label]="row.senders"
+                            class="sub-info-data col-md-4 text-center senders">
+                        <mat-icon
+                                [title]="'lang.contact' | translate"
+                                aria-hidden="true"
+                                class="fas fa-user">
+                        </mat-icon>
+                        &nbsp;
+                        <span [title]="row.senders">{{ row.senders }}</span>
+                    </span>
+                    <span [attr.aria-label]="row.documentDate | fullDate"
+                          class="sub-info-data col-md-4 text-right">
+                        <mat-icon
+                                [title]="'lang.creationDate' | translate"
+                                aria-hidden="true"
+                                class="fas fa-calendar">
+                        </mat-icon>
+                        &nbsp;
+                        <span [title]="row.documentDate | fullDate">{{ row.documentDate | timeAgo : 'full' | ucfirst }}</span>
+                    </span>
+                    <span
+                            [attr.aria-label]="row.destUserLabel + ' (' + row.destinationLabel +  ')'"
+                            class="sub-info-data col-md-6">
+                        <mat-icon
+                                [title]="'lang.getAssignee' | translate"
+                                aria-hidden="true"
+                                class="fas fa-sitemap">
+                        </mat-icon>
+                        &nbsp;
+                        <span [title]="row.destUserLabel + ' (' + row.destinationLabel +  ')'">{{ row.destUserLabel + ' (' + row.destinationLabel + ')' }}</span>
+                    </span>
+                    <span
+                            *ngIf="row.visaCircuit.length > 0"
+                            [attr.aria-label]="getUsersVisaCircuit(row)"
+                            class="sub-info-data col-md-6 text-right">
+                        <mat-icon
+                                [title]="'lang.visaWorkflow' | translate"
+                                aria-hidden="true"
+                                class="fas fa-list-ol">
+                        </mat-icon>
+                        &nbsp;
+                        <span [title]="getUsersVisaCircuit(row)">{{ getUsersVisaCircuit(row) }}</span>
+                    </span>
+                </div>
+                <div class="main-info" role="region">
+                    <span [title]="row.confidentiality ? ('lang.confidential' | translate) : ''"
+                          class="main-info-status">
+                        <mat-icon [ngStyle]="{'color': row.priorityColor}" [title]="row.statusLabel" aria-hidden="true"
+                                  class="{{row.statusImage.charAt(0)}}{{row.statusImage.charAt(1)}} {{row.statusImage}} {{row.statusImage.charAt(0)}}{{row.statusImage.charAt(1)}}-2x"
+                                  color="primary">
+                        </mat-icon>
+                        <span *ngIf="row.confidentiality" class="watermark">{{ 'lang.confidential' | translate }}</span>
+                    </span>
+                    <span [title]="row.chrono"
+                          class="main-info-data" style="width:200px;text-align:center;">
+                        {{ row.chrono }}
+                    </span>
+                    <span [class.undefined]="row.subject === ('lang.undefined' | translate)" [title]="row.subject"
+                          class="main-info-data"
+                          style="font-weight:bold;flex:1;">{{ row.subject | shorten: 150: '...' }}</span>
+                    <span class="main-info-data">
+                        <button (click)="$event.stopPropagation();unlinkResource(row)" *ngIf="editMode"
+                                [title]="'lang.unlink' | translate" color="warn"
+                                mat-icon-button>
+                            <mat-icon aria-hidden="true" class="fa fa-unlink fa-2x"></mat-icon>
+                        </button>
+                    </span>
+                    <span (mouseenter)="viewThumbnail(row);"
+                          (mouseleave)="closeThumbnail();"
+                          class="main-info-data"
+                          style="margin-left: 13px; z-index: 3;">
+                        <button (click)="$event.stopPropagation(); viewDocument(row)"
+                                [disabled]="!row.hasDocument || loadingIframe"
+                                [title]="row.hasDocument ? ('lang.viewResource' | translate) : ('lang.noDocument' | translate)"
+                                color="primary"
+                                mat-icon-button
+                        >
+                            <mat-icon
+                                    [ngClass]="[row.hasDocument ? 'fa-eye' : 'fa-eye-slash']"
+                                    aria-hidden="true"
+                                    class="fa fa-2x">
+                            </mat-icon>
+                        </button>
+                    </span>
+                </div>
+            </mat-cell>
+        </ng-container>
+        <mat-row
+                (click)="goTo(row.resId)"
+                *matRowDef="let row; columns: displayedColumns;"
+                [class.can-click]="canAccessResources"
+                role="row">
+        </mat-row>
+    </mat-table>
+    <button (click)="openSearchResourceModal()" *ngIf="editMode" [title]="'lang.linkResource' | translate"
+            class="linkRes" color="primary"
+            mat-fab>
+        <mat-icon aria-hidden="true" class="fa fa-link" style="height:auto;"></mat-icon>
+    </button>
+</ng-template>

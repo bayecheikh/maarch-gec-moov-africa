@@ -1,0 +1,35 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.editor-container {
+  flex: 1;
+}
+
+.save-modifications  {
+  position: absolute;
+  bottom: 120px;
+  right: 120px;
+}
+
+.loading {
+  display: flex;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #ffffffb3;
+  z-index: 2;
+  overflow: hidden;
+}
+
+.divider {
+  background: rgb(0 0 0 / 21%);
+  width: 1px;
+  height: 24px;
+  margin-left: 10px;
+  margin-right: 10px;
+}

@@ -1,0 +1,132 @@
+<div class="mat-dialog-content-container">
+    <h1 mat-dialog-title>{{ data.action.label }}</h1>
+    <div mat-dialog-content>
+        <div *ngIf="loading" class="loading" style="display:flex;height:100%;">
+            <mat-spinner style="margin:auto;"></mat-spinner>
+        </div>
+        <mat-sidenav-container autosize style="height:100%;">
+            <mat-sidenav-content style="background: white;padding:10px;">
+                <div>
+                    {{ 'lang.makeActionOn' | translate }}
+                    <b *ngIf="data.resIds.length === 0" class="highlight"
+                       color="primary">{{ 'lang.currentIndexingMail' | translate }}</b>
+                    <b *ngIf="data.resIds.length === 1" class="highlight" color="primary">{{ data.resource.chrono }}</b>
+                    <b *ngIf="data.resIds.length > 1" class="highlight" color="primary">{{ data.resIds.length }}
+                        {{ 'lang.elements' | translate }}</b> ?
+                </div>
+                <div *ngIf="data.resIds.length === 1" class="toggle-integration">
+                    <button (click)="onSidenavStateChanged()"
+                            [title]="getIntegratedAttachmentsLength() + ' ' + ('lang.attachmentsInSignatoryBook' | translate)"
+                            autofocus
+                            class="attachment-icon"
+                            color="primary"
+                            mat-icon-button>
+                        <mat-icon [matBadge]="getIntegratedAttachmentsLength()"
+                                  fontIcon="fa-paperclip fa-2x"
+                                  fontSet="fas">
+                        </mat-icon>
+                    </button>
+                    <mat-checkbox (click)="toggleIntegration(inteKey.key)"
+                                  *ngFor="let inteKey of integrationsInfo | keyvalue"
+                                  [checked]="data.resource.integrations[inteKey.key]"
+                                  [disabled]="loading"
+                                  color="primary">
+                        {{ 'lang.' + inteKey.key + '_doc' | translate }}
+                    </mat-checkbox>
+                </div>
+                <div *ngIf="resourcesError.length > 0" class="alert-message alert-message-danger mailList" role="alert">
+                    <p>
+                        {{ 'lang.canNotMakeAction' | translate }} :
+                    </p>
+                    <ul>
+                        <li *ngFor="let ressource of resourcesError">
+                            <b>{{ ressource.alt_identifier }}</b> : {{ 'lang.' + ressource.reason | translate }}
+                        </li>
+                    </ul>
+                </div>
+                <div *ngIf="resourcesMailing.length > 0 && appVisaWorkflow.getFirstVisaUser() !== '' && appVisaWorkflow.visaWorkflow.items[0].requested_signature"
+                     class="alert-message alert-message-info" role="alert">
+                    <p>{{ 'lang.mailingActionInformations' | translate }}</p>
+                    <ul>
+                        <li *ngFor="let ressource of resourcesMailing">
+                            <b>{{ ressource.alt_identifier }}</b>
+                        </li>
+                    </ul>
+                </div>
+                <app-visa-workflow
+                    #appVisaWorkflow
+                    *ngIf="!noResourceToProcess"
+                    [adminMode]="true"
+                    [lockVisaCircuit]="lockVisaCircuit"
+                    [signaturePositions]="signaturePositions"
+                    [visaWorkflowFromAction]="visaWorkflowClone"
+                >
+                </app-visa-workflow>
+                <div *ngIf="signatureBookService.config.isNewInternalParaph && data.resIds.length === 1 && resourcesToSign.length > 0"
+                     class="manage-signatures-positions">
+                    <button [disabled]="loading || !isValidAction()"
+                            [matMenuTriggerFor]="menu"
+                            class="manage-signatures-btn"
+                            color="primary"
+                            mat-button type="button">
+                        <mat-icon class="fas fa-compress-arrows-alt" color="primary"></mat-icon>
+                        <span> {{ 'lang.manageSignaturesPositions' | translate }} </span>
+                    </button>
+                    <mat-menu #menu="matMenu" class="docToSignTemplateMenu">
+                        <button (click)="openSignaturePosition(resource)" *ngFor="let resource of resourcesToSign"
+                                [title]="resource.title"
+                                mat-menu-item
+                                style="font-size:12px;">
+                            <mat-icon
+                                    [class.noPosition]="!hasPositions(resource)"
+                                    [class.position]="hasPositions(resource)"
+                                    class="fas fa-compress-arrows-alt"
+                                    style="height: auto;"
+                            >
+                            </mat-icon>
+                            <span>
+                                <span color="primary">{{ resource.chrono }}</span>&nbsp;- {{ resource.title }}
+                            </span>
+                        </button>
+                    </mat-menu>
+                </div>
+                <div *ngIf="!noResourceToProcess" style="padding-top: 10px;">
+                    <app-note-editor #noteEditor [resIds]="data.resIds"></app-note-editor>
+                    <div *ngIf="showToggle" class="row" style="margin: 10px 0px 10px 0px;">
+                        <mat-slide-toggle [(ngModel)]="canGoToNextRes" [checked]="canGoToNextRes"
+                                          [title]="'lang.canGoToNextResDesc' | translate" color="primary"
+                                          name="history">
+                            {{ 'lang.canGoToNextRes' | translate }}
+                        </mat-slide-toggle>
+                    </div>
+                </div>
+            </mat-sidenav-content>
+            <mat-sidenav
+                #snav2
+                *ngIf="data.resIds.length === 1"
+                [mode]="appService.getViewMode() ? 'over' : 'side'"
+                [ngStyle]="{'width': '600px'}"
+                [opened]="true"
+                autoFocus="false"
+                fixedTopGap="56"
+                position='end'
+                style="overflow-x:hidden;">
+                <app-attachments-list
+                    #attachmentsList
+                    (afterActionAttachment)="afterAttachmentToggle($event)"
+                    [isModal]="true"
+                    [resId]="data.resIds[0]">
+                </app-attachments-list>
+            </mat-sidenav>
+        </mat-sidenav-container>
+    </div>
+    <span class="divider-modal"></span>
+    <div class="actions" mat-dialog-actions>
+        <button (click)="onSubmit()" [disabled]="loading || !isValidAction()" color="primary" mat-button
+                mat-raised-button>{{ 'lang.validate' | translate }}
+        </button>
+        <button [disabled]="loading" [mat-dialog-close]="" mat-button
+                mat-raised-button>{{ 'lang.cancel' | translate }}
+        </button>
+    </div>
+</div>

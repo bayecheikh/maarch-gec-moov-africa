@@ -1,0 +1,10 @@
+<mat-card class="message-container">
+    <div *ngIf="headerService.welcomeMessage === undefined" class="loader-container">
+        <mat-spinner class="loader" diameter="20"></mat-spinner>
+    </div>
+    <div *ngIf="headerService.welcomeMessage !== undefined" class="message-content">
+        <div style="padding-left: 10px;">
+            <span [innerHTML]="headerService.welcomeMessage"></span>
+        </div>
+    </div>
+</mat-card>

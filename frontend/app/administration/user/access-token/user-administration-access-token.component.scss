@@ -1,0 +1,49 @@
+.access-token-container {
+    margin: 15px;
+    padding: 15px;
+    display: block;
+}
+
+.loading {
+    display: flex;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #ffffffb3;
+    z-index: 2;
+    overflow: hidden;
+}
+
+.mat-expansion-panel-header[aria-disabled=true] {
+    cursor: not-allowed !important;
+}
+
+.access-token-container {
+    width: 100%;
+    align-items: center;
+    display: flex;
+    border-radius: 10px;
+    border: solid 1px #ccc;
+    position: relative;
+    padding: 15px;
+    margin: 30px 0 0 0;
+
+    &-title {
+        white-space: pre;
+        overflow: hidden;
+        max-width: 85%;
+        text-overflow: ellipsis;
+        z-index: 1;
+        font-size: 10px;
+        font-weight: bold;
+        background: white;
+        position: absolute;
+        top: -10px;
+        left: 10px;
+        padding: 0px;
+        margin: 0px;
+        color: var(--maarch-color-primary);
+    }
+}

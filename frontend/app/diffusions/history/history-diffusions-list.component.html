@@ -1,0 +1,41 @@
+<ng-container *ngIf="!loading">
+    <ng-container *ngFor="let diffList of diffListHistory">
+        <div class="dateTitle">
+            <div [title]="diffList.creationDate | fullDate" color="primary" mat-subheader>
+                {{ 'lang.createdBy' | translate }}&nbsp;<b>{{ diffList.user }}</b>
+                &nbsp;<b>{{ diffList.creationDate | timeAgo : 'full' }}</b>
+            </div>
+            <mat-divider></mat-divider>
+        </div>
+        <ng-container *ngFor="let role of availableRoles">
+            <mat-expansion-panel *ngIf="diffList.details[role.id]" [expanded]="role.id === 'dest' || expanded"
+                                 class="diffusionList">
+                <mat-expansion-panel-header>
+                    <mat-panel-title>
+                        {{ role.label }}
+                        <ng-container *ngIf="role.id !== 'dest'">
+                            ({{ diffList.details[role.id].items.length }})
+                        </ng-container>
+                    </mat-panel-title>
+                </mat-expansion-panel-header>
+                <mat-list>
+                    <mat-list-item *ngFor="let diffusion of diffList.details[role.id].items;let i=index" class="item-diffusion-list"
+                                   disableRipple>
+                        <mat-icon [class.fa-sitemap]="diffusion.item_type === 'entity_id' || diffusion.item_type === 'entity'" [class.fa-user]="diffusion.item_type === 'user_id' || diffusion.item_type === 'user'" aria-hidden="true" class="fa"
+                                  color="primary"
+                                  mat-list-icon>
+                        </mat-icon>
+                        <div class="item-diffusion">
+                            <p [title]="diffusion.itemLabel" mat-line>{{ diffusion.itemLabel }}</p>
+                            <p [title]="diffusion.itemSubLabel" class="subInfo" mat-line>
+                                {{ diffusion.itemSubLabel }}</p>
+                        </div>
+                    </mat-list-item>
+                </mat-list>
+            </mat-expansion-panel>
+        </ng-container>
+    </ng-container>
+</ng-container>
+<div *ngIf="loading" style="display:flex;">
+    <mat-spinner style="margin:auto;"></mat-spinner>
+</div>
