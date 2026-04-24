@@ -193,3 +193,14 @@ button[disabled] {
   width: 214px;
   margin-bottom: 22px;
 }
+
+.prefix-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 8px;
+}
+
+mat-form-field.input-row .mat-mdc-form-field-infix {
+  display: flex;
+  align-items: center;
+}

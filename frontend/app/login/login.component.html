@@ -15,14 +15,21 @@
             <form (ngSubmit)="onSubmit()" [formGroup]="loginForm">
                 <div style="padding-left: 30px;padding-right: 30px;">
                     <mat-form-field *ngIf="isStandardAuthMode()" class="input-row login" appearance="outline"
-                                    style="padding-bottom: 0;">
-                                    <mat-icon color="primary" class="fa fa-2x fa-user" style="margin-right: 8px;"></mat-icon>
-                        <input #login autofocus id="login" name="login" matInput [placeholder]="'lang.id' | translate"
-                               formControlName="login"
-                               type="text">
+                style="padding-bottom: 0;">
+
+                        <span style="display: inline-flex; align-items: center;">
+                            <mat-icon color="primary" class="fa fa-2x fa-user" style="margin-right: 8px;"></mat-icon>
+                        </span>
+
+                        <input #login autofocus id="login" name="login" matInput
+                            [placeholder]="'lang.id' | translate"
+                            formControlName="login"
+                            type="text">
                     </mat-form-field>
                     <mat-form-field *ngIf="isStandardAuthMode()" class="input-row" appearance="outline">
-                        <mat-icon color="primary" class="fa fa-2x fa-lock" style="margin-right: 8px;"></mat-icon>
+                        <span style="display: inline-flex; align-items: center;">
+                            <mat-icon color="primary" class="fa fa-2x fa-lock" style="margin-right: 8px;"></mat-icon>
+                        </span>
                         <input id="password" name="password" matInput [placeholder]="'lang.password' | translate"
                                [type]="hidePassword ? 'password' : 'text'"
                                formControlName="password" autocomplete="off">
